@@ -1,0 +1,54 @@
+<!-- docs/questionnaire.html -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Fragebogen – Vorwissen</title>
+  <script type="module" src="js/supabase-client.js"></script>
+</head>
+<body>
+  <h1>Kurzer Fragebogen</h1>
+  <form id="questionnaire-form">
+    <p>
+      <strong>1. Hast du schon einmal von „Gaussian Splatting“ gehört?</strong><br>
+      <label><input type="radio" name="gs_known" value="true" required> Ja</label><br>
+      <label><input type="radio" name="gs_known" value="false"> Nein</label>
+    </p>
+
+    <p>
+      <strong>2. Wie gut schätzt du deine Erfahrung mit 3D-Visualisierung ein?</strong><br>
+      <select name="vis_experience" required>
+        <option value="">Bitte wählen</option>
+        <option value="1">1 – Keine Erfahrung</option>
+        <option value="2">2 – Wenig</option>
+        <option value="3">3 – Mittel</option>
+        <option value="4">4 – Gut</option>
+        <option value="5">5 – Sehr erfahren</option>
+      </select>
+    </p>
+
+    <p>
+      <strong>3. Möchtest du noch etwas ergänzen?</strong><br>
+      <textarea name="freitext" rows="3" cols="40" placeholder="(optional)"></textarea>
+    </p>
+
+    <button type="submit">Weiter zur Aufgabe</button>
+  </form>
+
+  <script type="module">
+    import { submitQuestionnaire } from './js/supabase-client.js'
+
+    document.getElementById('questionnaire-form').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const form = e.target
+      const gs_known = form.gs_known.value === "true"
+      const vis_experience = parseInt(form.vis_experience.value)
+      const freitext = form.freitext.value
+
+      await submitQuestionnaire({ gs_known, vis_experience, freitext })
+
+      window.location.href = "viewer.html"
+    })
+  </script>
+</body>
+</html>

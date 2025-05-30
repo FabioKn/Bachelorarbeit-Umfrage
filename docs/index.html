@@ -1,57 +1,23 @@
+<!-- docs/index.html -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Räumliche Lokalisierung – Umfrage</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Willkommen zur Umfrage</title>
   <script type="module" src="js/supabase-client.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 2rem;
-      background: #f9f9f9;
-    }
-    iframe {
-      border: 1px solid #ccc;
-      width: 100%;
-      height: 600px;
-    }
-    #unity-container {
-      display: none;
-      margin-top: 1rem;
-    }
-  </style>
 </head>
 <body>
-  <h1>Virtuelle Umfrage zur Raumwahrnehmung</h1>
-  <p>Bitte gib deinen Teilnehmercode ein, bevor du startest:</p>
-  <input type="text" id="user_id" placeholder="z. B. VP12XY" />
-  <button onclick="start()">Umfrage starten</button>
+  <h1>Räumliche Kognition in virtuellen Umgebungen</h1>
+  <p>Willkommen! Diese Studie untersucht, wie Menschen sich in 3D-Szenen orientieren. Die Umfrage dauert ca. 5 Minuten. Alle Daten werden anonym erhoben.</p>
+  <button id="startBtn">Teilnahme starten</button>
 
-  <div id="unity-container">
-    <iframe src="unity/index.html" allowfullscreen></iframe>
-  </div>
+  <script type="module">
+    import { createParticipant } from './js/supabase-client.js';
 
-  <script>
-    function start() {
-      const id = document.getElementById('user_id').value;
-      if (!id) return alert("Bitte Teilnehmercode eingeben!");
-      sessionStorage.setItem("user_id", id);
-      document.getElementById("unity-container").style.display = "block";
-    }
-
-    // Wird von Unity über Application.ExternalEval() aufgerufen
-    window.logClick = async function(task, x, y, z) {
-      const user_id = sessionStorage.getItem("user_id") || "anon";
-      const timestamp = new Date().toISOString();
-
-      // OPTIONAL: mit Supabase verbinden – wenn aktiviert
-      if (window.logToSupabase) {
-        await window.logToSupabase({ user_id, task, x, y, z, timestamp });
-      }
-
-      console.log(`[Klick gespeichert]`, { user_id, task, x, y, z });
-    };
+    document.getElementById("startBtn").addEventListener("click", async () => {
+      const id = await createParticipant();
+      if (id) window.location.href = "questionnaire.html";
+    });
   </script>
 </body>
 </html>

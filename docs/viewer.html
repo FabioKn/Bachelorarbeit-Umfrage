@@ -1,0 +1,47 @@
+<!-- docs/viewer.html -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>3D-Betrachtung</title>
+  <script type="module" src="js/supabase-client.js"></script>
+  <style>
+    #timer {
+      font-size: 1.2em;
+      margin-top: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>3D-Szene beobachten</h1>
+  <p>Bitte sieh dir die Szene genau an. Danach wirst du automatisch zur nächsten Seite weitergeleitet.</p>
+
+  <div id="viewer-container">
+    <iframe src="unity/index.html" width="960" height="600" frameborder="0"></iframe>
+  </div>
+
+  <div id="timer">Verbleibende Zeit: <span id="seconds">20</span> Sekunden</div>
+
+  <script type="module">
+    import { createParticipant } from './js/supabase-client.js'
+
+    // Teilnehmer-ID sichern
+    if (!sessionStorage.getItem('participant_id')) {
+      await createParticipant()
+    }
+
+    // Countdown starten
+    let seconds = 20
+    const secondsDisplay = document.getElementById('seconds')
+
+    const interval = setInterval(() => {
+      seconds--
+      secondsDisplay.textContent = seconds
+      if (seconds <= 0) {
+        clearInterval(interval)
+        window.location.href = "klick.html"
+      }
+    }, 1000)
+  </script>
+</body>
+</html>
