@@ -7,30 +7,25 @@
   <script type="module" src="js/supabase-client.js"></script>
   <style>
     #timer {
-      font-size: 1.2em;
-      margin-top: 1em;
+      font-size: 1.5em;
+      margin-top: 2em;
     }
   </style>
 </head>
 <body>
-  <h1>3D-Szene beobachten</h1>
-  <p>Bitte sieh dir die Szene genau an. Danach wirst du automatisch zur nächsten Seite weitergeleitet.</p>
+  <h1>Sieh genau hin</h1>
+  <p>Du hast 30 Sekunden Zeit, um dir das Bild einzuprägen.</p>
+  <p><strong>Bitte konzentriere dich!</strong></p>
 
-  <div id="viewer-container">
-    <iframe src="unity/index.html" width="960" height="600" frameborder="0"></iframe>
-  </div>
-
-  <div id="timer">Verbleibende Zeit: <span id="seconds">20</span> Sekunden</div>
+  <div id="timer">Die Szene verschwindet in <span id="seconds">20</span> Sekunden…</div>
 
   <script type="module">
     import { createParticipant } from './js/supabase-client.js'
 
-    // Teilnehmer-ID sichern
     if (!sessionStorage.getItem('participant_id')) {
       await createParticipant()
     }
 
-    // Countdown starten
     let seconds = 20
     const secondsDisplay = document.getElementById('seconds')
 
