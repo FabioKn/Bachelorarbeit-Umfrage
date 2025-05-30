@@ -40,7 +40,11 @@ export async function submitClick({ object_label, x, y, z }) {
     x, y, z,
     timestamp: new Date().toISOString()
   }])
-  if (error) console.error('Fehler beim Klick-Logging:', error)
+  if (error) {
+    console.error('Fehler beim Klick-Logging:', error)
+    return false
+  }
+  return true
 }
 
 export async function submitDistanceEstimate(estimated_distance) {
