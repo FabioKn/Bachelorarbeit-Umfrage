@@ -57,6 +57,17 @@
       alert("Vielen Dank! Deine Eingaben wurden gespeichert.")
       window.location.href = "index.html" // oder: Ergebnis-/Danke-Seite
     })
+
+    window.addEventListener("message", (event) => {
+    const { type, x, y, z } = event.data || {};
+    if (type === "unity-click" && typeof x === "number") {
+      if (window.logClick) {
+        window.logClick(x, y, z);
+      } else {
+        console.warn("logClick nicht definiert");
+      }
+    }
+  });
   </script>
 </body>
 </html>
