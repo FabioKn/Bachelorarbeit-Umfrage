@@ -13,14 +13,14 @@
 </head>
 <body>
   <h1>Objektpositionen & Distanzschätzung</h1>
-  <p>Bitte klicke auf die Stelle, an der du Objekt <strong id="current-object">A</strong> gesehen hast.</p>
+  <p>Bitte klicke auf die Stelle, an der du die meisten Lichter gesehen hast.</p>
 
   <iframe src="unity/index.html" allowfullscreen></iframe>
 
-  <div id="status">Warte auf Klick für Objekt A…</div>
+  <div id="status">Warte auf Klick ...</div>
 
   <div id="distance-form">
-    <p><strong>Wie weit waren die beiden Objekte ungefähr voneinander entfernt?</strong></p>
+    <p><strong>Wie weit waren die Lichter und die Raben ungefähr voneinander entfernt?</strong></p>
     <input type="number" id="estimated-distance" step="0.1" min="0" placeholder="Distanz in Metern" required>
     <button id="submit-distance">Absenden</button>
   </div>
@@ -35,7 +35,7 @@
     window.logClick = async function (x, y, z) {
       if (stage === 0) {
         await submitClick({ object_label: 'A', x, y, z })
-        document.getElementById('status').textContent = "Objekt A gespeichert. Bitte klicke nun auf Objekt B…"
+        document.getElementById('status').textContent = "Objekt A gespeichert. Bitte klicke nun auf die Raben…"
         document.getElementById('current-object').textContent = "B"
         stage = 1
       } else if (stage === 1) {
