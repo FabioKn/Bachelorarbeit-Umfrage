@@ -1,15 +1,65 @@
-<!-- docs/index.html -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <title>Willkommen zur Umfrage</title>
   <script type="module" src="js/supabase-client.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 960px;
+      margin: 2em auto;
+      padding: 1em;
+      position: relative;
+    }
+
+    #startBtn {
+      padding: 0.6em 1.2em;
+      font-size: 1em;
+      margin-top: 1em;
+      cursor: pointer;
+    }
+
+    #logo {
+      position: absolute;
+      top: 1em;
+      right: 1em;
+      width: 100px;
+      height: auto;
+    }
+
+    footer {
+      margin-top: 4em;
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    footer p {
+      margin: 0.3em 0;
+    }
+
+    footer a {
+      color: #444;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
+  <img src="HTWK.svg" alt="HTWK Leipzig" id="logo">
+
   <h1>Räumliche Kognition in virtuellen Umgebungen</h1>
   <p>Willkommen! Diese Studie untersucht, wie Menschen sich in 3D-Szenen orientieren. Die Umfrage dauert ca. 5 Minuten. Alle Daten werden anonym erhoben.</p>
+
   <button id="startBtn">Teilnahme starten</button>
+
+  <footer>
+    <p>Den Code für diese Umfrage findest du unter <a href="https://github.com/FabioKn/Bachelorarbeit-Umfrage" target="_blank">github.com/FabioKn/Bachelorarbeit-Umfrage</a></p>
+    <p>Die Datenbank läuft über die Open-Source-Plattform <a href="https://github.com/supabase/supabase/tree/master/examples" target="_blank">Supabase</a></p>
+  </footer>
 
   <script type="module">
     import { createParticipant } from './js/supabase-client.js';
