@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
   <title>Spark Viewer</title>
   <style>
     body { 
@@ -36,6 +36,86 @@
       line-height: 1.6;
       color: #666;
     }
+
+    /* Mobile-first responsive design */
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      #htmlContainer {
+        width: 95%;
+        height: 70vh;
+        margin: 10px auto;
+        border-radius: 4px;
+        border-width: 1px;
+      }
+      
+      .text-area {
+        max-width: 100%;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+      }
+      
+      h1 {
+        font-size: 1.5em;
+        margin-bottom: 15px;
+      }
+      
+      h2 {
+        font-size: 1.3em;
+        margin-bottom: 10px;
+      }
+      
+      p {
+        font-size: 0.9em;
+        line-height: 1.5;
+      }
+    }
+
+    /* Smartphone portrait */
+    @media screen and (max-width: 480px) {
+      body {
+        padding: 5px;
+      }
+      
+      #htmlContainer {
+        width: 98%;
+        height: 75vh;
+        margin: 5px auto;
+        border-radius: 2px;
+      }
+      
+      .text-area {
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+      
+      h1 {
+        font-size: 1.3em;
+      }
+      
+      h2 {
+        font-size: 1.2em;
+      }
+      
+      p {
+        font-size: 0.85em;
+      }
+    }
+
+    /* Landscape orientation on mobile */
+    @media screen and (max-width: 768px) and (orientation: landscape) {
+      #htmlContainer {
+        height: 80vh;
+      }
+      
+      .text-area {
+        padding: 10px;
+        margin-bottom: 8px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -45,6 +125,10 @@
   </div>
 
   <iframe id="htmlContainer" src="NeuerTest.html"></iframe>
+
+  <div class="text-area" style="text-align:center;">
+    <p>Direkter Link zur Seite: <a href="NeuerTest.html" target="_blank">NeuerTest.html</a></p>
+  </div>
 
   <div class="text-area">
     <h2>Beschreibung</h2>
