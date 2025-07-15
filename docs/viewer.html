@@ -2,96 +2,56 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>3D-Betrachtung</title>
-  <script type="module" src="js/supabase-client.js"></script>
+  <title>Spark Viewer</title>
   <style>
-    body {
-      font-family: sans-serif;
-      max-width: 960px;
-      margin: auto;
-      padding: 1em;
+    body { 
+      margin: 0; 
+      padding: 20px; 
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+    #htmlContainer {
+      width: 60%;
+      height: 60vh;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      margin: 20px auto;
+      display: block;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .text-area {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
       background: white;
-      color: black;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
     }
-
-    #unity-placeholder {
-  width: 100%;
-  max-height: 600px;
-  max-width: 100%;
-  object-fit: cover;
-  border: 1px solid #ccc;
-  display: block;
-}
-
-
-    #timer {
-      font-size: 1.2em;
+    h1, h2 {
+      color: #333;
       text-align: center;
     }
-
-    h1, p {
-      text-align: center;
+    p {
+      line-height: 1.6;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <header style="display: flex; justify-content: space-between; align-items: center;">
-  <h1>Räumliche Kognition in virtuellen Umgebungen</h1>
-  <img src="HTWK.svg" alt="HTWK Leipzig" style="height: 60px;">
-</header>
-  <h1>Sieh genau hin</h1>
-  <p>Du hast 30 Sekunden Zeit, um dir das Bild einzuprägen.</p>
-  <p><strong>Bitte konzentriere dich!</strong></p>
+  <div class="text-area">
+    <h1>Bachelorarbeit Viewer</h1>
+    <p>Hier können Sie Text vor dem Viewer hinzufügen. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+  </div>
 
-  <img src="cossi.png" id="unity-placeholder" alt="Szene-Vorschau" />
+  <iframe id="htmlContainer" src="../../NeuerTest.html"></iframe>
 
-  <div id="timer">Die Szene verschwindet in <span id="seconds">30</span> Sekunden…</div>
-
-
-
-  <script type="module">
-    import { createParticipant } from './js/supabase-client.js'
-
-    // Stelle sicher, dass participant_id gesetzt ist
-    if (!sessionStorage.getItem('participant_id')) {
-      await createParticipant()
-    }
-
-    // Countdown
-    let seconds = 30
-    const secondsDisplay = document.getElementById('seconds')
-
-    const interval = setInterval(() => {
-      seconds--
-      secondsDisplay.textContent = seconds
-      if (seconds <= 0) {
-        clearInterval(interval)
-        window.location.href = "klick.html"
-      }
-    }, 1000)
-
-    // Zentrierung des Bildes wie beim WebGL
-    const placeholder = document.getElementById('unity-placeholder')
-    function onResize() {
-      const container = placeholder.parentElement
-      let w = window.innerWidth
-      let h = window.innerHeight
-
-      const aspect = 960 / 600
-      if (w / h > aspect) {
-        w = h * aspect
-      } else {
-        h = w / aspect
-      }
-
-      container.style.width = placeholder.style.width = w + "px"
-      container.style.height = placeholder.style.height = h + "px"
-      container.style.left = (window.innerWidth - w) / 2 + "px"
-      container.style.top = (window.innerHeight - h) / 2 + "px"
-    }
-
-    window.addEventListener('resize', onResize)
-    onResize()
-  </script>
+  <div class="text-area">
+    <h2>Beschreibung</h2>
+    <p>Hier können Sie Text nach dem Viewer hinzufügen. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+    
+    <h2>Weitere Informationen</h2>
+    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  </div>
 </body>
 </html>
