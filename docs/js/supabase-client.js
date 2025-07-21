@@ -57,3 +57,102 @@ export async function submitDistanceEstimate(estimated_distance) {
   }])
   if (error) console.error('Fehler beim Speichern der Distanzschätzung:', error)
 }
+
+// Neue Funktionen für das erweiterte Umfrage-System
+
+export async function submitVideoQuestionnaire(formData) {
+  const participant_id = getParticipantId()
+  const { error } = await supabase.from('video_questionnaire').insert([{
+    participant_id,
+    ...formData,
+    timestamp: new Date().toISOString()
+  }])
+  if (error) console.error('Fehler beim Speichern des Video-Fragebogens:', error)
+}
+
+export async function logExplorationTime(explorationTime) {
+  const participant_id = getParticipantId()
+  const { error } = await supabase.from('exploration_sessions').insert([{
+    participant_id,
+    exploration_time: explorationTime,
+    timestamp: new Date().toISOString()
+  }])
+  if (error) console.error('Fehler beim Speichern der Erkundungszeit:', error)
+}
+
+export async function submitFinalQuestionnaire(formData) {
+  const participant_id = getParticipantId()
+  const { error } = await supabase.from('final_questionnaire').insert([{
+    participant_id,
+    ...formData,
+    timestamp: new Date().toISOString()
+  }])
+  if (error) console.error('Fehler beim Speichern des finalen Fragebogens:', error)
+}
+
+export async function loadPreviousAnswers() {
+  const participant_id = getParticipantId()
+  if (!participant_id) return null
+  
+  try {
+    // Lade alle Antworten des Teilnehmers
+    const [questionnaire, videoQuestionnaire, finalQuestionnaire] = await Promise.all([
+      supabase.from('questionnaire').select('*').eq('participant_id', participant_id).single(),
+      supabase.from('video_questionnaire').select('*').eq('participant_id', participant_id).single(),
+      supabase.from('final_questionnaire').select('*').eq('participant_id', participant_id).single()
+    ])
+    
+    const answers = []
+    
+    if (questionnaire.data) {
+      answers.push({
+        id: questionnaire.data.id,
+        type: 'Vorwissen-Fragebogen',
+        data: questionnaire.data
+      })
+    }
+    
+    if (videoQuestionnaire.data) {
+      answers.push({
+        id: videoQuestionnaire.data.id,
+        type: 'Video-Fragebogen',
+        data: videoQuestionnaire.data
+      })
+    }
+    
+    return answers
+  } catch (error) {
+    console.error('Fehler beim Laden der vorherigen Antworten:', error)
+    return null
+  }
+}
+
+export async function updatePreviousAnswer(id, updateData) {
+  // Diese Funktion könnte erweitert werden, um spezifische Antworten zu aktualisieren
+  console.log('Antwort-Update:', id, updateData)
+  // Hier könnte eine UPDATE-Operation auf die entsprechende Tabelle ausgeführt werden
+}
+
+export async function getParticipantStats(participantId) {
+  try {
+    // Hole verschiedene Statistiken für den Teilnehmer
+    const [sessions, questionnaires, videoQuestionnaires] = await Promise.all([
+      supabase.from('exploration_sessions').select('exploration_time').eq('participant_id', participantId),
+      supabase.from('questionnaire').select('id').eq('participant_id', participantId),
+      supabase.from('video_questionnaire').select('id').eq('participant_id', participantId)
+    ])
+    
+    let totalTime = 0
+    if (sessions.data && sessions.data.length > 0) {
+      totalTime = sessions.data.reduce((sum, session) => sum + (session.exploration_time || 0), 0)
+    }
+    
+    return {
+      total_time: totalTime,
+      questions_answered: (questionnaires.data?.length || 0) + (videoQuestionnaires.data?.length || 0)
+    }
+  } catch (error) {
+    console.error('Fehler beim Laden der Teilnehmer-Statistiken:', error)
+    return null
+  }
+}

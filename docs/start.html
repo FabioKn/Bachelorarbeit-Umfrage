@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bachelorarbeit - Start</title>
+  <script type="module" src="js/supabase-client.js"></script>
+  <style>
+    body { 
+      margin: 0; 
+      padding: 20px; 
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    
+    .video-container {
+      margin: 30px 0;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    #videoFrame {
+      width: 100%;
+      height: 500px;
+      border: none;
+    }
+    
+    .instructions {
+      margin: 20px 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      border-left: 4px solid #007bff;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background-color: #e0e0e0;
+      border-radius: 4px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background-color: #007bff;
+      width: 0%;
+      transition: width 0.1s ease;
+    }
+    
+    .time-display {
+      margin: 10px 0;
+      font-weight: bold;
+      color: #555;
+    }
+    
+    #continueBtn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      display: none;
+    }
+    
+    #continueBtn:hover {
+      background-color: #218838;
+    }
+    
+    /* Mobile responsive */
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      .container {
+        padding: 20px;
+      }
+      
+      #videoFrame {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+      <h1>Räumliche Kognition in virtuellen Umgebungen</h1>
+      <img src="HTWK.svg" alt="HTWK Leipzig" style="height: 60px;">
+    </header>
+    
+    <h2>Willkommen zur Studie</h2>
+    
+    <div class="instructions">
+      <h3>Aufgabe 1: Video betrachten</h3>
+      <p>Bitte schauen Sie sich das folgende 20-Sekunden-Video aufmerksam an. Das Video zeigt eine 3D-Umgebung, die mit Gaussian Splatting erstellt wurde.</p>
+      <p><strong>Wichtig:</strong> Prägen Sie sich die Szene gut ein, da Sie später Fragen dazu beantworten werden.</p>
+    </div>
+    
+    <div class="video-container">
+      <iframe id="videoFrame" 
+              allow="fullscreen; xr-spatial-tracking" 
+              src="https://superspl.at/s?id=89ca341d">
+      </iframe>
+    </div>
+    
+    <div class="time-display" id="timeDisplay">Video wird geladen...</div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    
+    <button id="continueBtn" onclick="continueToQuestionnaire()">
+      Weiter zum Fragebogen →
+    </button>
+    
+    <div class="instructions" style="margin-top: 30px;">
+      <p><em>Hinweis: Der "Weiter"-Button wird nach 20 Sekunden automatisch erscheinen.</em></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createParticipant } from './js/supabase-client.js'
+
+    // Teilnehmer-ID erstellen beim Laden der Seite
+    window.addEventListener('load', async () => {
+      await createParticipant()
+    })
+
+    let timeElapsed = 0;
+    let timer;
+    const videoDuration = 20; // 20 Sekunden
+
+    function startTimer() {
+      timer = setInterval(() => {
+        timeElapsed++;
+        updateDisplay();
+        
+        if (timeElapsed >= videoDuration) {
+          clearInterval(timer);
+          showContinueButton();
+        }
+      }, 1000);
+    }
+
+    function updateDisplay() {
+      const remaining = videoDuration - timeElapsed;
+      const progressPercent = (timeElapsed / videoDuration) * 100;
+      
+      document.getElementById('timeDisplay').textContent = 
+        `Verbleibende Zeit: ${remaining} Sekunden`;
+      document.getElementById('progressFill').style.width = `${progressPercent}%`;
+    }
+
+    function showContinueButton() {
+      document.getElementById('timeDisplay').textContent = 'Video beendet!';
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('continueBtn').style.display = 'inline-block';
+    }
+
+    // Timer starten, wenn die Seite geladen ist
+    window.addEventListener('load', () => {
+      setTimeout(startTimer, 2000); // 2 Sekunden Verzögerung für das Laden
+      document.getElementById('timeDisplay').textContent = 'Video startet in 2 Sekunden...';
+    });
+
+    // Continue-Funktion global verfügbar machen
+    window.continueToQuestionnaire = function() {
+      window.location.href = 'video-questionnaire.html';
+    }
+  </script>
+</body>
+</html>

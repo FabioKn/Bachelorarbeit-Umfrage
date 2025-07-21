@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fragebogen - Video</title>
+  <script type="module" src="js/supabase-client.js"></script>
+  <style>
+    body { 
+      margin: 0; 
+      padding: 20px; 
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+    
+    h1, h2 {
+      color: #333;
+    }
+    
+    .question {
+      margin: 25px 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      border-left: 4px solid #007bff;
+    }
+    
+    .question label {
+      display: block;
+      margin: 8px 0;
+      cursor: pointer;
+    }
+    
+    .question input[type="radio"] {
+      margin-right: 10px;
+    }
+    
+    select, textarea, input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      box-sizing: border-box;
+    }
+    
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    
+    button:hover {
+      background-color: #0056b3;
+    }
+    
+    .required {
+      color: red;
+    }
+    
+    /* Mobile responsive */
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+      <h1>Räumliche Kognition in virtuellen Umgebungen</h1>
+      <img src="HTWK.svg" alt="HTWK Leipzig" style="height: 60px;">
+    </header>
+    
+    <h2>Fragebogen zum Video</h2>
+    <p>Bitte beantworten Sie die folgenden Fragen basierend auf dem Video, das Sie gerade gesehen haben.</p>
+    
+    <form id="video-questionnaire-form">
+      <div class="question">
+        <strong>1. Wie gut konnten Sie die räumliche Struktur der gezeigten Umgebung verstehen? <span class="required">*</span></strong>
+        <label><input type="radio" name="spatial_understanding" value="1" required> 1 - Sehr schlecht</label>
+        <label><input type="radio" name="spatial_understanding" value="2"> 2 - Schlecht</label>
+        <label><input type="radio" name="spatial_understanding" value="3"> 3 - Mittel</label>
+        <label><input type="radio" name="spatial_understanding" value="4"> 4 - Gut</label>
+        <label><input type="radio" name="spatial_understanding" value="5"> 5 - Sehr gut</label>
+      </div>
+
+      <div class="question">
+        <strong>2. Wie realistisch wirkte die dargestellte Umgebung auf Sie? <span class="required">*</span></strong>
+        <label><input type="radio" name="realism" value="1" required> 1 - Sehr unrealistisch</label>
+        <label><input type="radio" name="realism" value="2"> 2 - Unrealistisch</label>
+        <label><input type="radio" name="realism" value="3"> 3 - Mittel</label>
+        <label><input type="radio" name="realism" value="4"> 4 - Realistisch</label>
+        <label><input type="radio" name="realism" value="5"> 5 - Sehr realistisch</label>
+      </div>
+
+      <div class="question">
+        <strong>3. Welche Objekte oder Bereiche sind Ihnen besonders aufgefallen?</strong>
+        <textarea name="notable_objects" rows="4" placeholder="Beschreiben Sie, was Ihnen aufgefallen ist..."></textarea>
+      </div>
+
+      <div class="question">
+        <strong>4. Wieviele Tische haben Sie in der Umgebung gesehen?</strong>
+        <input type="number" name="tables_seen" min="0" placeholder="Anzahl der Tische">
+      </div>
+
+      <div class="question">
+        <strong>5. Welche Farbe hat das Sofa?</strong>
+        <input type="text" name="sofa_color" placeholder="Farbe des Sofas (z.B. rot, blau, grün)">
+      </div>
+
+      <div class="question">
+        <strong>6. Wie schätzen Sie die Qualität der 3D-Darstellung ein? <span class="required">*</span></strong>
+        <label><input type="radio" name="quality" value="1" required> 1 - Sehr schlecht</label>
+        <label><input type="radio" name="quality" value="2"> 2 - Schlecht</label>
+        <label><input type="radio" name="quality" value="3"> 3 - Mittel</label>
+        <label><input type="radio" name="quality" value="4"> 4 - Gut</label>
+        <label><input type="radio" name="quality" value="5"> 5 - Sehr gut</label>
+      </div>
+
+      <div class="question">
+        <strong>7. Haben Sie das Gefühl, dass Sie sich in der Umgebung orientieren könnten?</strong>
+        <label><input type="radio" name="orientation_confidence" value="1" required> 1 - Überhaupt nicht</label>
+        <label><input type="radio" name="orientation_confidence" value="2"> 2 - Eher nicht</label>
+        <label><input type="radio" name="orientation_confidence" value="3"> 3 - Teilweise</label>
+        <label><input type="radio" name="orientation_confidence" value="4"> 4 - Eher ja</label>
+        <label><input type="radio" name="orientation_confidence" value="5"> 5 - Definitiv</label>
+      </div>
+
+      <div class="question">
+        <strong>8. Zusätzliche Kommentare oder Beobachtungen:</strong>
+        <textarea name="additional_comments" rows="3" placeholder="(optional)"></textarea>
+      </div>
+
+      <button type="submit">Weiter zur interaktiven Erkundung →</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { submitVideoQuestionnaire } from './js/supabase-client.js'
+
+    document.getElementById('video-questionnaire-form').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const form = e.target
+      
+      const formData = {
+        spatial_understanding: parseInt(form.spatial_understanding.value),
+        realism: parseInt(form.realism.value),
+        notable_objects: form.notable_objects.value,
+        tables_seen: form.tables_seen.value ? parseInt(form.tables_seen.value) : null,
+        sofa_color: form.sofa_color.value,
+        quality: parseInt(form.quality.value),
+        orientation_confidence: parseInt(form.orientation_confidence.value),
+        additional_comments: form.additional_comments.value
+      }
+
+      await submitVideoQuestionnaire(formData)
+      window.location.href = "interactive-viewer.html"
+    })
+  </script>
+</body>
+</html>

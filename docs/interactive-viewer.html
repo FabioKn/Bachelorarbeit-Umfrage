@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interaktive Erkundung</title>
+  <script type="module" src="js/supabase-client.js"></script>
+  <style>
+    body { 
+      margin: 0; 
+      padding: 0; 
+      font-family: Arial, sans-serif;
+      background-color: #000;
+    }
+    
+    .header {
+      background-color: #fff;
+      padding: 15px 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 1000;
+    }
+    
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      margin: 0;
+      color: #333;
+      font-size: 1.5em;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .timer {
+      background-color: #007bff;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    
+    #viewer-container {
+      height: calc(100vh - 80px);
+      width: 100%;
+      position: relative;
+    }
+    
+    #interactiveViewer {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    
+    .instructions-overlay {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      z-index: 100;
+      transition: opacity 0.3s ease;
+    }
+    
+    .instructions-overlay h3 {
+      margin-top: 0;
+      color: #fff;
+    }
+    
+    .instructions-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .hide-instructions {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    
+    .floating-controls {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+    }
+    
+    .control-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .control-btn:hover {
+      background-color: #0056b3;
+    }
+    
+    .control-btn.finish {
+      background-color: #28a745;
+    }
+    
+    .control-btn.finish:hover {
+      background-color: #218838;
+    }
+    
+    /* Mobile responsive */
+    @media screen and (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+      }
+      
+      .header h1 {
+        font-size: 1.2em;
+      }
+      
+      .instructions-overlay {
+        position: relative;
+        margin: 10px;
+        max-width: none;
+      }
+      
+      .floating-controls {
+        position: relative;
+        bottom: auto;
+        right: auto;
+        margin: 10px;
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      
+      #viewer-container {
+        height: calc(100vh - 120px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <h1>Interaktive Erkundung</h1>
+      <div class="controls">
+        <div class="timer" id="explorationTimer">Zeit: 0:00</div>
+        <img src="HTWK.svg" alt="HTWK Leipzig" style="height: 40px;">
+      </div>
+    </div>
+  </div>
+  
+  <div id="viewer-container">
+    <div class="instructions-overlay" id="instructionsOverlay">
+      <h3>🎮 Anleitung</h3>
+      <p><strong>Erkunden Sie die Umgebung frei!</strong></p>
+      <ul>
+        <li>🖱️ <strong>Maus bewegen:</strong> Umschauen</li>
+        <li>🖱️ <strong>Linke Maustaste + Ziehen:</strong> Kamera drehen</li>
+        <li>🖱️ <strong>Rechte Maustaste + Ziehen:</strong> Verschieben</li>
+        <li>⚡ <strong>Mausrad:</strong> Zoomen</li>
+        <li>📱 <strong>Touch:</strong> Tippen und Ziehen zum Navigieren</li>
+      </ul>
+      <p><em>Prägen Sie sich die Umgebung gut ein. Nach der Erkundung werden Sie weitere Fragen beantworten.</em></p>
+      <button class="hide-instructions" onclick="hideInstructions()">Anleitung ausblenden</button>
+    </div>
+    
+    <iframe id="interactiveViewer" 
+            allow="fullscreen; xr-spatial-tracking" 
+            src="https://superspl.at/s?id=89ca341d">
+    </iframe>
+    
+    <div class="floating-controls">
+      <button class="control-btn" onclick="showInstructions()">📋 Anleitung anzeigen</button>
+      <button class="control-btn finish" onclick="finishExploration()">✅ Erkundung beenden</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { logExplorationTime } from './js/supabase-client.js'
+
+    let startTime = Date.now();
+    let timerInterval;
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const minutes = Math.floor(elapsed / 60000);
+        const seconds = Math.floor((elapsed % 60000) / 1000);
+        document.getElementById('explorationTimer').textContent = 
+          `Zeit: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+      return Date.now() - startTime;
+    }
+
+    // Globale Funktionen
+    window.hideInstructions = function() {
+      document.getElementById('instructionsOverlay').classList.add('hidden');
+    }
+
+    window.showInstructions = function() {
+      document.getElementById('instructionsOverlay').classList.remove('hidden');
+    }
+
+    window.finishExploration = async function() {
+      const explorationTime = stopTimer();
+      
+      // Zeit in der Datenbank speichern
+      await logExplorationTime(explorationTime);
+      
+      // Weiterleitung zum finalen Fragebogen
+      window.location.href = 'final-questionnaire.html';
+    }
+
+    // Timer beim Laden starten
+    window.addEventListener('load', () => {
+      startTimer();
+      
+      // Anleitung nach 10 Sekunden automatisch ausblenden
+      setTimeout(() => {
+        hideInstructions();
+      }, 10000);
+    });
+
+    // Warnung vor dem Verlassen der Seite
+    window.addEventListener('beforeunload', (e) => {
+      e.preventDefault();
+      e.returnValue = 'Sind Sie sicher, dass Sie die Erkundung beenden möchten?';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abschlussfragebogen</title>
+  <script type="module" src="js/supabase-client.js"></script>
+  <style>
+    body { 
+      margin: 0; 
+      padding: 20px; 
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+    
+    h1, h2 {
+      color: #333;
+    }
+    
+    .section {
+      margin: 30px 0;
+      padding: 25px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #007bff;
+    }
+    
+    .question {
+      margin: 20px 0;
+    }
+    
+    .question label {
+      display: block;
+      margin: 8px 0;
+      cursor: pointer;
+    }
+    
+    .question input[type="radio"], .question input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    
+    select, textarea, input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      box-sizing: border-box;
+    }
+    
+    .comparison-section {
+      background-color: #fff3cd;
+      border-left-color: #ffc107;
+    }
+    
+    .previous-answers {
+      background-color: #e7f3ff;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+      border: 1px solid #bee5eb;
+    }
+    
+    .edit-button {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    
+    .edit-button:hover {
+      background-color: #5a6268;
+    }
+    
+    button.submit {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 18px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 30px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    button.submit:hover {
+      background-color: #218838;
+    }
+    
+    .required {
+      color: red;
+    }
+    
+    .slider-container {
+      margin: 15px 0;
+    }
+    
+    .slider {
+      width: 100%;
+      margin: 10px 0;
+    }
+    
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .current-value {
+      font-weight: bold;
+      color: #007bff;
+      margin-left: 10px;
+    }
+    
+    /* Mobile responsive */
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      .container {
+        padding: 20px;
+      }
+      
+      .section {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+      <h1>Räumliche Kognition in virtuellen Umgebungen</h1>
+      <img src="HTWK.svg" alt="HTWK Leipzig" style="height: 60px;">
+    </header>
+    
+    <h2>Abschlussfragebogen</h2>
+    
+    <!-- Vorherige Antworten anzeigen -->
+    <div class="section">
+      <h3>📋 Ihre bisherigen Antworten</h3>
+      <div id="previousAnswers">
+        <p>Lade vorherige Antworten...</p>
+      </div>
+    </div>
+    
+    <form id="final-questionnaire-form">
+      <!-- Vergleich zwischen Video und interaktiver Erkundung -->
+      <div class="section comparison-section">
+        <h3>🔄 Vergleich: Video vs. Interaktive Erkundung</h3>
+        
+        <div class="question">
+          <strong>1. Wie unterschied sich Ihr Verständnis der Umgebung zwischen dem Video und der interaktiven Erkundung? <span class="required">*</span></strong>
+          <label><input type="radio" name="understanding_difference" value="much_better_interactive" required> Viel besser durch interaktive Erkundung</label>
+          <label><input type="radio" name="understanding_difference" value="better_interactive"> Besser durch interaktive Erkundung</label>
+          <label><input type="radio" name="understanding_difference" value="no_difference"> Kein Unterschied</label>
+          <label><input type="radio" name="understanding_difference" value="better_video"> Besser durch Video</label>
+          <label><input type="radio" name="understanding_difference" value="much_better_video"> Viel besser durch Video</label>
+        </div>
+
+        <div class="question">
+          <strong>2. Welche Aspekte konnten Sie durch die interaktive Erkundung besser verstehen? (Mehrfachauswahl möglich)</strong>
+          <label><input type="checkbox" name="interactive_benefits" value="spatial_relationships"> Räumliche Beziehungen zwischen Objekten</label>
+          <label><input type="checkbox" name="interactive_benefits" value="scale_size"> Größenverhältnisse</label>
+          <label><input type="checkbox" name="interactive_benefits" value="details"> Details der Objekte</label>
+          <label><input type="checkbox" name="interactive_benefits" value="navigation"> Orientierung und Navigation</label>
+          <label><input type="checkbox" name="interactive_benefits" value="depth"> Tiefenwahrnehmung</label>
+          <label><input type="checkbox" name="interactive_benefits" value="overview"> Gesamtüberblick</label>
+          <label><input type="checkbox" name="interactive_benefits" value="none"> Keine Vorteile</label>
+        </div>
+
+        <div class="question">
+          <strong>3. Wie realistisch empfanden Sie die interaktive 3D-Umgebung im Vergleich zum Video?</strong>
+          <div class="slider-container">
+            <label for="realism_interactive">Realismus der interaktiven Umgebung:</label>
+            <input type="range" id="realism_interactive" name="realism_interactive" min="1" max="10" value="5" class="slider">
+            <div class="slider-labels">
+              <span>1 - Sehr unrealistisch</span>
+              <span>10 - Sehr realistisch</span>
+            </div>
+            <span class="current-value" id="realismValue">5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Räumliche Kognition -->
+      <div class="section">
+        <h3>🧠 Räumliche Wahrnehmung</h3>
+        
+        <div class="question">
+          <strong>4. Wie gut können Sie sich jetzt in der Umgebung orientieren? <span class="required">*</span></strong>
+          <label><input type="radio" name="final_orientation" value="1" required> 1 - Überhaupt nicht</label>
+          <label><input type="radio" name="final_orientation" value="2"> 2 - Schlecht</label>
+          <label><input type="radio" name="final_orientation" value="3"> 3 - Mittelmäßig</label>
+          <label><input type="radio" name="final_orientation" value="4"> 4 - Gut</label>
+          <label><input type="radio" name="final_orientation" value="5"> 5 - Sehr gut</label>
+        </div>
+
+        <div class="question">
+          <strong>5. Könnten Sie eine mentale Karte der Umgebung zeichnen?</strong>
+          <label><input type="radio" name="mental_map" value="1" required> 1 - Definitiv nicht</label>
+          <label><input type="radio" name="mental_map" value="2"> 2 - Wahrscheinlich nicht</label>
+          <label><input type="radio" name="mental_map" value="3"> 3 - Vielleicht</label>
+          <label><input type="radio" name="mental_map" value="4"> 4 - Wahrscheinlich ja</label>
+          <label><input type="radio" name="mental_map" value="5"> 5 - Definitiv ja</label>
+        </div>
+
+        <div class="question">
+          <strong>6. Schätzen Sie die ungefähre Größe des Raumes (in Metern):</strong>
+          <label for="room_length">Länge: <input type="number" id="room_length" name="room_length" min="1" max="100" placeholder="z.B. 10"> Meter</label>
+          <label for="room_width">Breite: <input type="number" id="room_width" name="room_width" min="1" max="100" placeholder="z.B. 8"> Meter</label>
+          <label for="room_height">Höhe: <input type="number" id="room_height" name="room_height" min="1" max="20" placeholder="z.B. 3"> Meter</label>
+        </div>
+
+        <div class="question">
+          <strong>7. Denken Sie an die Anfangsposition zurück. Wo befand sich das Sofa in Bezug zu Ihnen?</strong>
+          <label><input type="radio" name="sofa_position" value="left" required> Links</label>
+          <label><input type="radio" name="sofa_position" value="right"> Rechts</label>
+          <label><input type="radio" name="sofa_position" value="center"> In der Mitte</label>
+          <label><input type="radio" name="sofa_position" value="behind"> Hinter Ihnen</label>
+          <label><input type="radio" name="sofa_position" value="unknown"> Weiß ich nicht mehr</label>
+        </div>
+        
+        <div class="question">
+          <strong>8. Wo befand sich das Sofa im Raum?</strong>
+          <label><input type="radio" name="sofa_location" value="left_wall" required> An der linken Wand</label>
+          <label><input type="radio" name="sofa_location" value="right_wall"> An der rechten Wand</label>
+          <label><input type="radio" name="sofa_location" value="center"> In der Mitte des Raumes</label>
+          <label><input type="radio" name="sofa_location" value="corner"> In einer Ecke</label>
+          <label><input type="radio" name="sofa_location" value="unknown"> Weiß ich nicht mehr</label>
+        </div>
+      </div>
+
+      <!-- Benutzererfahrung -->
+      <div class="section">
+        <h3>💻 Benutzererfahrung</h3>
+        
+        <div class="question">
+          <strong>9. Wie intuitiv war die Navigation in der 3D-Umgebung? <span class="required">*</span></strong>
+          <label><input type="radio" name="navigation_ease" value="1" required> 1 - Sehr schwierig</label>
+          <label><input type="radio" name="navigation_ease" value="2"> 2 - Schwierig</label>
+          <label><input type="radio" name="navigation_ease" value="3"> 3 - Mittelmäßig</label>
+          <label><input type="radio" name="navigation_ease" value="4"> 4 - Einfach</label>
+          <label><input type="radio" name="navigation_ease" value="5"> 5 - Sehr einfach</label>
+        </div>
+
+        <div class="question">
+          <strong>10. Hatten Sie technische Probleme während der Erkundung?</strong>
+          <label><input type="checkbox" name="technical_issues" value="loading_slow"> Langsame Ladezeiten</label>
+          <label><input type="checkbox" name="technical_issues" value="lag"> Ruckelige Darstellung</label>
+          <label><input type="checkbox" name="technical_issues" value="controls"> Probleme mit der Steuerung</label>
+          <label><input type="checkbox" name="technical_issues" value="quality"> Schlechte Bildqualität</label>
+          <label><input type="checkbox" name="technical_issues" value="none"> Keine Probleme</label>
+        </div>
+      </div>
+
+      <!-- Abschließende Bewertung -->
+      <div class="section">
+        <h3>⭐ Abschließende Bewertung</h3>
+        
+        <div class="question">
+          <strong>11. Gesamtbewertung der Erfahrung:</strong>
+          <div class="slider-container">
+            <label for="overall_rating">Gesamteindruck (1 = sehr schlecht, 10 = ausgezeichnet):</label>
+            <input type="range" id="overall_rating" name="overall_rating" min="1" max="10" value="5" class="slider">
+            <div class="slider-labels">
+              <span>1 - Sehr schlecht</span>
+              <span>10 - Ausgezeichnet</span>
+            </div>
+            <span class="current-value" id="overallValue">5</span>
+          </div>
+        </div>
+
+        <div class="question">
+          <strong>12. Abschließende Kommentare, Vorschläge oder Kritik:</strong>
+          <textarea name="final_comments" rows="5" placeholder="Teilen Sie Ihre Gedanken zur gesamten Erfahrung mit..."></textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="submit">🏁 Studie abschließen</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { loadPreviousAnswers, submitFinalQuestionnaire, updatePreviousAnswer } from './js/supabase-client.js'
+
+    // Slider-Updates
+    document.getElementById('realism_interactive').addEventListener('input', (e) => {
+      document.getElementById('realismValue').textContent = e.target.value;
+    });
+
+    document.getElementById('overall_rating').addEventListener('input', (e) => {
+      document.getElementById('overallValue').textContent = e.target.value;
+    });
+
+    // Vorherige Antworten laden
+    async function displayPreviousAnswers() {
+      const answers = await loadPreviousAnswers();
+      const container = document.getElementById('previousAnswers');
+      
+      if (answers && answers.length > 0) {
+        container.innerHTML = answers.map(answer => `
+          <div class="previous-answers">
+            <h4>${answer.type} <button class="edit-button" onclick="editAnswer('${answer.type}', '${answer.id}')">Bearbeiten</button></h4>
+            <p>${JSON.stringify(answer.data, null, 2).replace(/[{},"]/g, '').replace(/\n/g, '<br>')}</p>
+          </div>
+        `).join('');
+      } else {
+        container.innerHTML = '<p>Keine vorherigen Antworten gefunden.</p>';
+      }
+    }
+
+    // Antwort bearbeiten
+    window.editAnswer = function(type, id) {
+      const newValue = prompt(`Neue Antwort für ${type}:`);
+      if (newValue) {
+        updatePreviousAnswer(id, { updated_value: newValue });
+        displayPreviousAnswers(); // Refresh
+      }
+    }
+
+    // Form submission
+    document.getElementById('final-questionnaire-form').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const form = e.target
+      
+      // Checkbox-Werte sammeln
+      const interactiveBenefits = Array.from(form.querySelectorAll('input[name="interactive_benefits"]:checked'))
+        .map(cb => cb.value);
+      
+      const technicalIssues = Array.from(form.querySelectorAll('input[name="technical_issues"]:checked'))
+        .map(cb => cb.value);
+      
+      const formData = {
+        understanding_difference: form.understanding_difference.value,
+        interactive_benefits: interactiveBenefits,
+        realism_interactive: parseInt(form.realism_interactive.value),
+        final_orientation: parseInt(form.final_orientation.value),
+        mental_map: parseInt(form.mental_map.value),
+        room_length: form.room_length.value ? parseInt(form.room_length.value) : null,
+        room_width: form.room_width.value ? parseInt(form.room_width.value) : null,
+        room_height: form.room_height.value ? parseInt(form.room_height.value) : null,
+        sofa_position: form.sofa_position.value,
+        sofa_location: form.sofa_location.value,
+        navigation_ease: parseInt(form.navigation_ease.value),
+        technical_issues: technicalIssues,
+        overall_rating: parseInt(form.overall_rating.value),
+        final_comments: form.final_comments.value
+      }
+
+      await submitFinalQuestionnaire(formData)
+      
+      // Weiterleitung zur Dankesseite
+      window.location.href = "thank-you.html"
+    })
+
+    // Beim Laden die vorherigen Antworten anzeigen
+    window.addEventListener('load', () => {
+      displayPreviousAnswers();
+    });
+  </script>
+</body>
+</html>
