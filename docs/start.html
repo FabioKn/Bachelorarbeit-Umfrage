@@ -102,22 +102,6 @@
       display: none;
     }
     
-    #startVideoBtn {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 12px 30px;
-      font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 20px;
-      display: none;
-    }
-    
-    #startVideoBtn:hover {
-      background-color: #0056b3;
-    }
-    
     #continueBtn:hover {
       background-color: #218838;
     }
@@ -170,16 +154,12 @@
       <div class="progress-fill" id="progressFill"></div>
     </div>
     
-    <button id="startVideoBtn" onclick="manualStartTimer()">
-      Video ist bereit - Timer starten 
-    </button>
-    
     <button id="continueBtn" onclick="continueToQuestionnaire()">
       Weiter zum Fragebogen →
     </button>
     
     <div class="instructions" style="margin-top: 30px;">
-      <p><em>Hinweis: Warten Sie, bis das Video vollständig geladen ist und klicken Sie dann auf "Timer starten". Nach 20 Sekunden wird das Video gesperrt und Sie können zum Fragebogen weiter.</em></p>
+      <p><em>Hinweis: Der Timer startet automatisch, sobald das Video vollständig geladen wurde. Nach 20 Sekunden wird das Video gesperrt und Sie können zum Fragebogen weiter.</em></p>
     </div>
   </div>
 
@@ -230,77 +210,98 @@
       document.getElementById('videoOverlay').style.display = 'flex';
     }
 
-    // Video-Load-Event abfangen - mehrere Strategien
+    // Video-Load-Detection über Netzwerk-Monitoring
     let loadStartTime = Date.now();
-    let contentLoadCheckInterval;
+    let largeFileLoaded = false;
+    let networkMonitorInterval;
     
-    // Strategie 1: iframe load event (basis)
-    document.getElementById('videoFrame').addEventListener('load', () => {
-      console.log('iframe loaded');
-      checkContentReady();
-    });
-
-    // Strategie 2: Intelligente Wartestrategie
-    function checkContentReady() {
-      const minimumLoadTime = 3000; // Mindestens 3 Sekunden warten
-      const elapsedTime = Date.now() - loadStartTime;
-      
-      if (elapsedTime < minimumLoadTime) {
-        // Zu früh - noch warten
-        document.getElementById('timeDisplay').textContent = 
-          `Video lädt... (${Math.ceil((minimumLoadTime - elapsedTime) / 1000)}s)`;
+    // Überwache Netzwerk-Aktivität
+    function monitorNetworkActivity() {
+      // Performance API nutzen um Ressourcen zu überwachen
+      const observer = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
         
-        setTimeout(checkContentReady, 500);
-        return;
-      }
+        entries.forEach(entry => {
+          // Suche nach großen .ply Dateien (Gaussian Splatting Models)
+          if (entry.name.includes('.ply') || entry.name.includes('scene') || entry.transferSize > 50000000) {
+            console.log('Large file detected:', entry.name, 'Size:', entry.transferSize, 'Duration:', entry.duration);
+            
+            // Wenn große Datei fertig geladen
+            if (entry.responseEnd > 0) {
+              largeFileLoaded = true;
+              onVideoReady();
+            }
+          }
+        });
+      });
       
-      // Nach Mindestzeit: bereit melden
-      videoLoaded = true;
-      document.getElementById('timeDisplay').textContent = 'Video sollte bereit sein. Klicken Sie "Timer starten" wenn das Video läuft.';
-      document.getElementById('startVideoBtn').style.display = 'inline-block';
+      observer.observe({ entryTypes: ['resource'] });
+      
+      // Fallback: Nach 10 Sekunden auch als "ready" betrachten
+      setTimeout(() => {
+        if (!largeFileLoaded) {
+          console.log('Fallback: Assuming video ready after 10s');
+          largeFileLoaded = true;
+          onVideoReady();
+        }
+      }, 10000);
     }
 
-    // Manuelle Timer-Aktivierung
-    window.manualStartTimer = function() {
-      document.getElementById('startVideoBtn').style.display = 'none';
-      document.getElementById('timeDisplay').textContent = 'Timer startet in 2 Sekunden...';
+    // Alternative: Iframe Content Monitoring
+    function monitorIframeContent() {
+      const iframe = document.getElementById('videoFrame');
       
+      try {
+        // Versuche auf iframe Inhalt zuzugreifen (wird bei Cross-Origin fehlschlagen)
+        iframe.addEventListener('load', () => {
+          console.log('Iframe loaded, starting content check...');
+          
+          // Überwache weiterhin die Netzwerk-Performance
+          const checkInterval = setInterval(() => {
+            const perfEntries = performance.getEntriesByType('resource');
+            const largePlies = perfEntries.filter(entry => 
+              entry.name.includes('.ply') && entry.transferSize > 30000000
+            );
+            
+            if (largePlies.length > 0 && largePlies.every(entry => entry.responseEnd > 0)) {
+              console.log('All large PLY files loaded');
+              clearInterval(checkInterval);
+              largeFileLoaded = true;
+              onVideoReady();
+            }
+          }, 1000);
+          
+          // Stoppe Check nach 15 Sekunden
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            if (!largeFileLoaded) {
+              largeFileLoaded = true;
+              onVideoReady();
+            }
+          }, 15000);
+        });
+      } catch (e) {
+        console.log('Cross-origin iframe, using fallback method');
+      }
+    }
+
+    function onVideoReady() {
+      if (videoLoaded) return; // Bereits aktiviert
+      
+      videoLoaded = true;
+      document.getElementById('timeDisplay').textContent = 'Video geladen! Timer startet in 2 Sekunden...';
+      
+      // Automatisch Timer starten nach 2 Sekunden
       setTimeout(() => {
         startTimer();
       }, 2000);
     }
 
-    // Strategie 3: Erweiterte Heuristik basierend auf Netzwerk-Performance
-    function getEstimatedLoadTime() {
-      // Basis: 5 Sekunden
-      let estimatedTime = 5000;
-      
-      // Connection-API falls verfügbar
-      if ('connection' in navigator) {
-        const connection = navigator.connection;
-        if (connection.effectiveType === 'slow-2g') estimatedTime = 15000;
-        else if (connection.effectiveType === '2g') estimatedTime = 10000;
-        else if (connection.effectiveType === '3g') estimatedTime = 7000;
-        else if (connection.effectiveType === '4g') estimatedTime = 5000;
-      }
-      
-      return estimatedTime;
-    }
-
-    // Fallback: Timer starten falls andere Strategien nicht funktionieren
-    window.addEventListener('load', () => {
-      const maxWaitTime = getEstimatedLoadTime();
-      
-      setTimeout(() => {
-        if (!videoLoaded) {
-          console.log('Fallback: Starting timer after', maxWaitTime, 'ms');
-          document.getElementById('timeDisplay').textContent = 'Video sollte bereit sein. Timer startet...';
-          videoLoaded = true;
-          setTimeout(() => {
-            startTimer();
-          }, 1000);
-        }
-      }, maxWaitTime);
+    // Initialisierung
+    document.getElementById('videoFrame').addEventListener('load', () => {
+      console.log('iframe loaded, starting monitoring...');
+      monitorNetworkActivity();
+      monitorIframeContent();
     });
 
     // Continue-Funktion global verfügbar machen
