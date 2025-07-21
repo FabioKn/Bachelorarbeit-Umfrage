@@ -222,63 +222,160 @@
       }, 2000);
     }
 
-    // Console Message Detection für Third-Party Loading
-    let originalConsole = console.log;
+    // Console Message Detection für Browser-Warnungen
+    let originalConsoleLog = console.log;
     let originalConsoleInfo = console.info;
     let originalConsoleWarn = console.warn;
+    let originalConsoleError = console.error;
     let consoleMessageDetected = false;
 
     function interceptConsoleMessages() {
-      // Überschreibe console Methoden um Third-Party Meldungen zu erkennen
+      // Überschreibe ALLE console Methoden um Browser-Warnungen zu erkennen
       console.log = function(...args) {
-        checkForThirdPartyMessage(args);
-        originalConsole.apply(console, args);
+        checkForBrowserWarning(args);
+        originalConsoleLog.apply(console, args);
       };
       
       console.info = function(...args) {
-        checkForThirdPartyMessage(args);
+        checkForBrowserWarning(args);
         originalConsoleInfo.apply(console, args);
       };
       
       console.warn = function(...args) {
-        checkForThirdPartyMessage(args);
+        checkForBrowserWarning(args);
         originalConsoleWarn.apply(console, args);
       };
-    }
+      
+      console.error = function(...args) {
+        checkForBrowserWarning(args);
+        originalConsoleError.apply(console, args);
+      };
 
-    function checkForThirdPartyMessage(args) {
-      const message = args.join(' ').toLowerCase();
-      if ((message.includes('superspl.at') || message.includes('third-party') || 
-           message.includes('partitioned') || message.includes('drittanbieter')) && 
-          !consoleMessageDetected) {
-        
-        console.log('🎯 Third-party loading detected for superspl.at - video likely ready!');
-        consoleMessageDetected = true;
-        
-        // Kurze Verzögerung und dann Video als bereit markieren
-        setTimeout(() => {
-          if (!videoLoaded) {
-            console.log('✅ Starting video based on console message detection');
-            onVideoReady();
-          }
-        }, 3000); // 3 Sekunden nach der Console-Meldung
+      // Zusätzlich: Observer für Performance Entries als Fallback
+      if ('PerformanceObserver' in window) {
+        try {
+          const observer = new PerformanceObserver((list) => {
+            const entries = list.getEntries();
+            entries.forEach(entry => {
+              if (entry.name && entry.name.includes('superspl.at')) {
+                console.log('🎯 PerformanceObserver detected superspl.at activity');
+                if (!consoleMessageDetected) {
+                  consoleMessageDetected = true;
+                  setTimeout(() => {
+                    if (!videoLoaded) {
+                      console.log('✅ Starting video based on PerformanceObserver detection');
+                      onVideoReady();
+                    }
+                  }, 2000);
+                }
+              }
+            });
+          });
+          observer.observe({ entryTypes: ['resource', 'navigation'] });
+        } catch (e) {
+          console.log('PerformanceObserver not available:', e);
+        }
       }
     }
 
-    // Einfache Initialisierung mit NUR Console-Überwachung
+    function checkForBrowserWarning(args) {
+      const message = args.join(' ').toLowerCase();
+      
+      // Prüfe auf die spezifische partitionierte Cookie-Warnung
+      if ((message.includes('superspl.at') && 
+          (message.includes('partitioniert') || message.includes('partitioned') ||
+           message.includes('cookie') || message.includes('speicherzugriff') ||
+           message.includes('drittanbieter') || message.includes('third-party'))) && 
+          !consoleMessageDetected) {
+        
+        console.log('🎯 Browser-Warnung für superspl.at erkannt - Video bereit!');
+        consoleMessageDetected = true;
+        
+        // Sofort Video starten (kürzere Verzögerung)
+        setTimeout(() => {
+          if (!videoLoaded) {
+            console.log('✅ Timer startet basierend auf Browser-Warnung');
+            onVideoReady();
+          }
+        }, 1000); // Nur 1 Sekunde Verzögerung
+      }
+      
+      // Fallback: Auch auf einfache superspl.at Erwähnung reagieren
+      else if (message.includes('superspl.at') && !consoleMessageDetected) {
+        console.log('🎯 superspl.at Aktivität erkannt');
+        consoleMessageDetected = true;
+        
+        setTimeout(() => {
+          if (!videoLoaded) {
+            console.log('✅ Timer startet basierend auf superspl.at Aktivität');
+            onVideoReady();
+          }
+        }, 2000);
+      }
+    }
+
+    // Zusätzlich: Event-Listener für window errors/warnings
+    function setupWindowListeners() {
+      window.addEventListener('error', (event) => {
+        if (event.message && event.message.includes('superspl.at')) {
+          console.log('🎯 Window error mit superspl.at erkannt');
+          if (!consoleMessageDetected) {
+            consoleMessageDetected = true;
+            setTimeout(() => {
+              if (!videoLoaded) {
+                onVideoReady();
+              }
+            }, 1000);
+          }
+        }
+      });
+
+      // Unhandled promise rejections
+      window.addEventListener('unhandledrejection', (event) => {
+        if (event.reason && String(event.reason).includes('superspl.at')) {
+          console.log('🎯 Promise rejection mit superspl.at erkannt');
+          if (!consoleMessageDetected) {
+            consoleMessageDetected = true;
+            setTimeout(() => {
+              if (!videoLoaded) {
+                onVideoReady();
+              }
+            }, 1000);
+          }
+        }
+      });
+    }
+
+    // Erweiterte Initialisierung mit mehreren Detection-Methoden
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('Starting video timer with console message detection only...');
+      console.log('Starting video timer with enhanced browser warning detection...');
       
       // Starte Console-Überwachung
       interceptConsoleMessages();
       
-      // Fallback-Timer: Falls keine Console-Meldung kommt
+      // Starte Window-Event-Listener
+      setupWindowListeners();
+      
+      // Zusätzlich: iframe onload als Trigger für superspl.at Aktivität
+      const iframe = document.getElementById('videoFrame');
+      iframe.addEventListener('load', () => {
+        console.log('iframe loaded - superspl.at should start loading soon...');
+        
+        // Nach iframe load: kurz warten und dann prüfen ob schon Console-Meldung kam
+        setTimeout(() => {
+          if (!consoleMessageDetected) {
+            console.log('🔍 Iframe geladen, aber noch keine Browser-Warnung - warte weiter...');
+          }
+        }, 2000);
+      });
+      
+      // Verkürzter Fallback-Timer: Falls gar keine Erkennung
       setTimeout(() => {
         if (!videoLoaded && !consoleMessageDetected) {
-          console.log('⏰ Fallback: No console message detected, starting after 20 seconds');
+          console.log('⏰ Fallback: Keine Browser-Warnung erkannt, starte nach 15 Sekunden');
           onVideoReady();
         }
-      }, 20000);
+      }, 15000); // Verkürzt auf 15 Sekunden
     });
 
     // Continue-Funktion global verfügbar machen
