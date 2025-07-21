@@ -210,78 +210,124 @@
       document.getElementById('videoOverlay').style.display = 'flex';
     }
 
-    // Video-Load-Detection über Netzwerk-Monitoring
+    // Optimierte Video-Load-Detection für .ply Dateien
     let loadStartTime = Date.now();
-    let largeFileLoaded = false;
-    let networkMonitorInterval;
+    let videoLoadDetected = false;
+    let initialDataTransfer = 0;
+    let plyLoadingDetected = false;
+    let statusUpdateInterval;
     
-    // Überwache Netzwerk-Aktivität
-    function monitorNetworkActivity() {
-      // Performance API nutzen um Ressourcen zu überwachen
-      const observer = new PerformanceObserver((list) => {
-        const entries = list.getEntries();
+    // Status-Updates für den Benutzer
+    function updateLoadingStatus() {
+      const timeDisplay = document.getElementById('timeDisplay');
+      let loadingMessages = [
+        'Video wird geladen...',
+        'Lade 3D-Daten...',
+        'Lade Gaussian Splatting Datei...',
+        'Vorbereitung fast abgeschlossen...'
+      ];
+      
+      let messageIndex = 0;
+      statusUpdateInterval = setInterval(() => {
+        if (!videoLoadDetected) {
+          timeDisplay.textContent = loadingMessages[messageIndex % loadingMessages.length];
+          messageIndex++;
+        }
+      }, 3000);
+    }
+    
+    // Überwache gezielt die .ply Datei (scene.compressed.ply)
+    function monitorPlyFileLoad() {
+      console.log('Starting PLY file monitoring...');
+      
+      // Überwache alle 1.5 Sekunden
+      const checkInterval = setInterval(() => {
+        const perfEntries = performance.getEntriesByType('resource');
         
-        entries.forEach(entry => {
-          // Suche nach großen .ply Dateien (Gaussian Splatting Models)
-          if (entry.name.includes('.ply') || entry.name.includes('scene') || entry.transferSize > 50000000) {
-            console.log('Large file detected:', entry.name, 'Size:', entry.transferSize, 'Duration:', entry.duration);
-            
-            // Wenn große Datei fertig geladen
-            if (entry.responseEnd > 0) {
-              largeFileLoaded = true;
-              onVideoReady();
-            }
-          }
+        // Suche spezifisch nach .ply Dateien
+        const plyFiles = perfEntries.filter(entry => {
+          const url = entry.name.toLowerCase();
+          return url.includes('.ply') || 
+                 url.includes('scene.compressed') ||
+                 url.includes('gaussian') ||
+                 (url.includes('superspl.at') && entry.transferSize > 10000000); // Große supersplat Dateien
         });
-      });
-      
-      observer.observe({ entryTypes: ['resource'] });
-      
-      // Fallback: Nach 10 Sekunden auch als "ready" betrachten
-      setTimeout(() => {
-        if (!largeFileLoaded) {
-          console.log('Fallback: Assuming video ready after 10s');
-          largeFileLoaded = true;
+        
+        // Prüfe ob eine große .ply Datei vollständig geladen wurde
+        const loadedPlyFiles = plyFiles.filter(entry => {
+          const isCompleted = entry.responseEnd > 0 && entry.duration > 0;
+          const isLarge = entry.transferSize > 5000000; // Mindestens 5MB
+          return isCompleted && isLarge;
+        });
+        
+        if (loadedPlyFiles.length > 0 && !videoLoadDetected) {
+          console.log('PLY file(s) loaded successfully:', loadedPlyFiles);
+          loadedPlyFiles.forEach(file => {
+            console.log(`- ${file.name}: ${(file.transferSize / 1024 / 1024).toFixed(2)} MB in ${file.duration.toFixed(0)}ms`);
+          });
+          
+          videoLoadDetected = true;
+          clearInterval(checkInterval);
+          if (statusUpdateInterval) clearInterval(statusUpdateInterval);
+          onVideoReady();
+          return;
+        }
+        
+        // Fallback: Überwache gesamtes Transfer-Volumen
+        const totalTransfer = perfEntries.reduce((total, entry) => total + (entry.transferSize || 0), 0);
+        const supersplatTransfer = perfEntries
+          .filter(entry => 
+            entry.name.includes('superspl.at') || 
+            entry.name.includes('cloudfront') ||
+            entry.name.includes('amazonaws')
+          )
+          .reduce((total, entry) => total + (entry.transferSize || 0), 0);
+        
+        console.log(`Network activity - Total: ${(totalTransfer / 1024 / 1024).toFixed(1)}MB, Supersplat: ${(supersplatTransfer / 1024 / 1024).toFixed(1)}MB`);
+        
+        // Wenn viel Supersplat-Traffic erkannt wird (wahrscheinlich die .ply Datei)
+        if (supersplatTransfer > 20000000 && !videoLoadDetected) {
+          console.log('Large Supersplat transfer detected - assuming PLY file loaded');
+          videoLoadDetected = true;
+          clearInterval(checkInterval);
+          if (statusUpdateInterval) clearInterval(statusUpdateInterval);
           onVideoReady();
         }
-      }, 30000);
+        
+      }, 1500); // Alle 1.5 Sekunden prüfen
+      
+      // Stoppe Monitoring nach 25 Sekunden mit Fallback
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        if (!videoLoadDetected) {
+          console.log('Fallback: Assuming video ready after 25s monitoring timeout');
+          videoLoadDetected = true;
+          if (statusUpdateInterval) clearInterval(statusUpdateInterval);
+          onVideoReady();
+        }
+      }, 25000);
     }
-
-    // Alternative: Iframe Content Monitoring
+    
+    // Alternative: Direkte iframe Content Monitoring
     function monitorIframeContent() {
       const iframe = document.getElementById('videoFrame');
       
       try {
-        // Versuche auf iframe Inhalt zuzugreifen (wird bei Cross-Origin fehlschlagen)
+        // Iframe Load Event
         iframe.addEventListener('load', () => {
-          console.log('Iframe loaded, starting content check...');
+          console.log('Iframe loaded, starting PLY file monitoring...');
           
-          // Überwache weiterhin die Netzwerk-Performance
-          const checkInterval = setInterval(() => {
-            const perfEntries = performance.getEntriesByType('resource');
-            const largePlies = perfEntries.filter(entry => 
-              entry.name.includes('.ply') && entry.transferSize > 30000000
-            );
-            
-            if (largePlies.length > 0 && largePlies.every(entry => entry.responseEnd > 0)) {
-              console.log('All large PLY files loaded');
-              clearInterval(checkInterval);
-              largeFileLoaded = true;
-              onVideoReady();
-            }
-          }, 1000);
-          
-          // Stoppe Check nach 15 Sekunden
+          // Starte das optimierte PLY-Monitoring
           setTimeout(() => {
-            clearInterval(checkInterval);
-            if (!largeFileLoaded) {
-              largeFileLoaded = true;
-              onVideoReady();
-            }
-          }, 15000);
+            monitorPlyFileLoad();
+          }, 2000); // 2 Sekunden warten, damit iframe initialisiert ist
         });
       } catch (e) {
-        console.log('Cross-origin iframe, using fallback method');
+        console.log('Error setting up iframe monitoring:', e);
+        // Fallback bei Fehlern
+        setTimeout(() => {
+          monitorPlyFileLoad();
+        }, 3000);
       }
     }
 
@@ -289,19 +335,41 @@
       if (videoLoaded) return; // Bereits aktiviert
       
       videoLoaded = true;
-      document.getElementById('timeDisplay').textContent = 'Video geladen! Timer startet in 2 Sekunden...';
+      document.getElementById('timeDisplay').textContent = 'Video geladen! Timer startet automatisch...';
       
-      // Automatisch Timer starten nach 2 Sekunden
+      // Kurze Pause damit der Benutzer es sieht
       setTimeout(() => {
+        document.getElementById('timeDisplay').textContent = 'Timer läuft: 0 / 20 Sekunden';
         startTimer();
-      }, 2000);
+      }, 1500);
     }
 
-    // Initialisierung
-    document.getElementById('videoFrame').addEventListener('load', () => {
-      console.log('iframe loaded, starting monitoring...');
-      monitorNetworkActivity();
+    // Initialisierung der Ladeerkennung
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded, setting up video monitoring...');
+      
+      const iframe = document.getElementById('videoFrame');
+      
+      // Starte Status-Updates für den Benutzer
+      updateLoadingStatus();
+      
+      // Sofortiges Monitoring starten (für den Fall, dass iframe schnell lädt)
+      setTimeout(() => {
+        monitorPlyFileLoad();
+      }, 1000);
+      
+      // Zusätzlich iframe load event überwachen
       monitorIframeContent();
+      
+      // Zusätzlicher Fallback-Timer für sehr langsame Verbindungen
+      setTimeout(() => {
+        if (!videoLoadDetected) {
+          console.log('Emergency fallback: Force start after 35 seconds');
+          videoLoadDetected = true;
+          if (statusUpdateInterval) clearInterval(statusUpdateInterval);
+          onVideoReady();
+        }
+      }, 35000);
     });
 
     // Continue-Funktion global verfügbar machen
