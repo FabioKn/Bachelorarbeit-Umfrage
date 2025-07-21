@@ -252,12 +252,6 @@
         hideInstructions();
       }, 10000);
     });
-
-    // Warnung vor dem Verlassen der Seite
-    window.addEventListener('beforeunload', (e) => {
-      e.preventDefault();
-      e.returnValue = 'Sind Sie sicher, dass Sie die Erkundung beenden möchten?';
-    });
   </script>
 </body>
 </html>
