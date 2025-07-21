@@ -237,9 +237,10 @@
     let timer;
     let videoLoaded = false;
     const videoDuration = 20; // 20 Sekunden
+    const videoLoadTime = 15; // 15 Sekunden Ladezeit angenommen
 
     function startTimer() {
-      if (!videoLoaded) return; // Nur starten wenn Video geladen ist
+      if (!videoLoaded) return;
       
       timer = setInterval(() => {
         timeElapsed++;
@@ -405,7 +406,7 @@
     }
 
     function onVideoReady() {
-      if (videoLoaded) return; // Bereits aktiviert
+      if (videoLoaded) return;
       
       videoLoaded = true;
       
@@ -426,35 +427,80 @@
       setTimeout(() => {
         timeDisplay.textContent = 'Timer läuft: 0 / 20 Sekunden';
         startTimer();
-      }, 1500);
+      }, 2000);
     }
 
-    // Initialisierung der Ladeerkennung
+    // Browser Console Message Detection für Third-Party Loading
+    let originalConsole = console.log;
+    let originalConsoleInfo = console.info;
+    let originalConsoleWarn = console.warn;
+    let consoleMessageDetected = false;
+
+    function interceptConsoleMessages() {
+      // Überschreibe console Methoden um Third-Party Meldungen zu erkennen
+      console.log = function(...args) {
+        checkForThirdPartyMessage(args);
+        originalConsole.apply(console, args);
+      };
+      
+      console.info = function(...args) {
+        checkForThirdPartyMessage(args);
+        originalConsoleInfo.apply(console, args);
+      };
+      
+      console.warn = function(...args) {
+        checkForThirdPartyMessage(args);
+        originalConsoleWarn.apply(console, args);
+      };
+    }
+
+    function checkForThirdPartyMessage(args) {
+      const message = args.join(' ').toLowerCase();
+      if ((message.includes('superspl.at') || message.includes('third-party') || 
+           message.includes('partitioned') || message.includes('drittanbieter')) && 
+          !consoleMessageDetected) {
+        
+        console.log('🎯 Third-party loading detected for superspl.at - video likely ready!');
+        consoleMessageDetected = true;
+        
+        // Kurze Verzögerung und dann Video als bereit markieren
+        setTimeout(() => {
+          if (!videoLoaded) {
+            console.log('✅ Starting video based on console message detection');
+            onVideoReady();
+          }
+        }, 3000); // 3 Sekunden nach der Console-Meldung
+      }
+    }
+
+    // Einfache Initialisierung mit Console-Überwachung
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('DOM loaded, setting up video monitoring...');
+      console.log('Starting video timer with console message detection...');
       
+      // Starte Console-Überwachung
+      interceptConsoleMessages();
+      
+      // iframe Load Event (Backup-Methode)
       const iframe = document.getElementById('videoFrame');
+      iframe.addEventListener('load', () => {
+        console.log('Iframe loaded');
+        
+        // Warte 10 Sekunden nach iframe load (verkürzt, da Console-Detection primär)
+        setTimeout(() => {
+          if (!videoLoaded && !consoleMessageDetected) {
+            console.log('Backup: Assuming video ready after 10 seconds without console detection');
+            onVideoReady();
+          }
+        }, 10000);
+      });
       
-      // Starte Status-Updates für den Benutzer
-      updateLoadingStatus();
-      
-      // Sofortiges Monitoring starten (für den Fall, dass iframe schnell lädt)
+      // Fallback für sehr langsame Verbindungen
       setTimeout(() => {
-        monitorPlyFileLoad();
-      }, 1000);
-      
-      // Zusätzlich iframe load event überwachen
-      monitorIframeContent();
-      
-      // Zusätzlicher Fallback-Timer für sehr langsame Verbindungen
-      setTimeout(() => {
-        if (!videoLoadDetected) {
-          console.log('Emergency fallback: Force start after 35 seconds');
-          videoLoadDetected = true;
-          if (statusUpdateInterval) clearInterval(statusUpdateInterval);
+        if (!videoLoaded) {
+          console.log('Emergency fallback after 25 seconds');
           onVideoReady();
         }
-      }, 35000);
+      }, 25000);
     });
 
     // Continue-Funktion global verfügbar machen
