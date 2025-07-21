@@ -102,6 +102,22 @@
       display: none;
     }
     
+    #startVideoBtn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      display: none;
+    }
+    
+    #startVideoBtn:hover {
+      background-color: #0056b3;
+    }
+    
     #continueBtn:hover {
       background-color: #218838;
     }
@@ -154,12 +170,16 @@
       <div class="progress-fill" id="progressFill"></div>
     </div>
     
+    <button id="startVideoBtn" onclick="manualStartTimer()">
+      Video ist bereit - Timer starten 
+    </button>
+    
     <button id="continueBtn" onclick="continueToQuestionnaire()">
       Weiter zum Fragebogen →
     </button>
     
     <div class="instructions" style="margin-top: 30px;">
-      <p><em>Hinweis: Der Timer startet automatisch, sobald das Video vollständig geladen wurde. Nach 20 Sekunden wird das Video gesperrt und Sie können zum Fragebogen weiter.</em></p>
+      <p><em>Hinweis: Warten Sie, bis das Video vollständig geladen ist und klicken Sie dann auf "Timer starten". Nach 20 Sekunden wird das Video gesperrt und Sie können zum Fragebogen weiter.</em></p>
     </div>
   </div>
 
@@ -210,26 +230,77 @@
       document.getElementById('videoOverlay').style.display = 'flex';
     }
 
-    // Video-Load-Event abfangen
+    // Video-Load-Event abfangen - mehrere Strategien
+    let loadStartTime = Date.now();
+    let contentLoadCheckInterval;
+    
+    // Strategie 1: iframe load event (basis)
     document.getElementById('videoFrame').addEventListener('load', () => {
-      videoLoaded = true;
-      document.getElementById('timeDisplay').textContent = 'Video geladen! Timer startet in 2 Sekunden...';
+      console.log('iframe loaded');
+      checkContentReady();
+    });
+
+    // Strategie 2: Intelligente Wartestrategie
+    function checkContentReady() {
+      const minimumLoadTime = 3000; // Mindestens 3 Sekunden warten
+      const elapsedTime = Date.now() - loadStartTime;
       
-      // 2 Sekunden warten, dann Timer starten
+      if (elapsedTime < minimumLoadTime) {
+        // Zu früh - noch warten
+        document.getElementById('timeDisplay').textContent = 
+          `Video lädt... (${Math.ceil((minimumLoadTime - elapsedTime) / 1000)}s)`;
+        
+        setTimeout(checkContentReady, 500);
+        return;
+      }
+      
+      // Nach Mindestzeit: bereit melden
+      videoLoaded = true;
+      document.getElementById('timeDisplay').textContent = 'Video sollte bereit sein. Klicken Sie "Timer starten" wenn das Video läuft.';
+      document.getElementById('startVideoBtn').style.display = 'inline-block';
+    }
+
+    // Manuelle Timer-Aktivierung
+    window.manualStartTimer = function() {
+      document.getElementById('startVideoBtn').style.display = 'none';
+      document.getElementById('timeDisplay').textContent = 'Timer startet in 2 Sekunden...';
+      
       setTimeout(() => {
         startTimer();
       }, 2000);
-    });
+    }
 
-    // Fallback: Timer starten falls load-Event nicht funktioniert
+    // Strategie 3: Erweiterte Heuristik basierend auf Netzwerk-Performance
+    function getEstimatedLoadTime() {
+      // Basis: 5 Sekunden
+      let estimatedTime = 5000;
+      
+      // Connection-API falls verfügbar
+      if ('connection' in navigator) {
+        const connection = navigator.connection;
+        if (connection.effectiveType === 'slow-2g') estimatedTime = 15000;
+        else if (connection.effectiveType === '2g') estimatedTime = 10000;
+        else if (connection.effectiveType === '3g') estimatedTime = 7000;
+        else if (connection.effectiveType === '4g') estimatedTime = 5000;
+      }
+      
+      return estimatedTime;
+    }
+
+    // Fallback: Timer starten falls andere Strategien nicht funktionieren
     window.addEventListener('load', () => {
+      const maxWaitTime = getEstimatedLoadTime();
+      
       setTimeout(() => {
         if (!videoLoaded) {
-          document.getElementById('timeDisplay').textContent = 'Video wird geladen... Timer startet automatisch.';
+          console.log('Fallback: Starting timer after', maxWaitTime, 'ms');
+          document.getElementById('timeDisplay').textContent = 'Video sollte bereit sein. Timer startet...';
           videoLoaded = true;
-          startTimer();
+          setTimeout(() => {
+            startTimer();
+          }, 1000);
         }
-      }, 5000); // 5 Sekunden Fallback
+      }, maxWaitTime);
     });
 
     // Continue-Funktion global verfügbar machen
