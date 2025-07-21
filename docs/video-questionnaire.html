@@ -2,7 +2,26 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initia        <strong>5      <div class="question">
+        <strong>6. Wie realistisch fanden Sie die Darstellung?</strong>
+        <label><input type="radio" name="realism" value="1" required> 1 - Sehr unrealistisch</label>
+        <label><input type="radio" name="realism" value="2"> 2 - Unrealistisch</label>
+        <label><input type="radio" name="realism" value="3"> 3 - Neutral</label>
+        <label><input type="radio" name="realism" value="4"> 4 - Realistisch</label>
+        <label><input type="radio" name="realism" value="5"> 5 - Sehr realistisch</label>
+      </div>
+
+      <div class="question">
+        <strong>7. Welche Objekte oder Bereiche sind Ihnen besonders aufgefallen?</strong>onnten Sie die räumliche Struktur der gezeigten Umgebung verstehen?</strong>
+        <label><input type="radio" name="spatial_understanding" value="1" required> 1 - Sehr schlecht</label>
+        <label><input type="radio" name="spatial_understanding" value="2"> 2 - Schlecht</label>
+        <label><input type="radio" name="spatial_understanding" value="3"> 3 - Mittel</label>
+        <label><input type="radio" name="spatial_understanding" value="4"> 4 - Gut</label>
+        <label><input type="radio" name="spatial_understanding" value="5"> 5 - Sehr gut</label>
+      </div>
+
+      <div class="question">
+        <strong>6. Wie realistisch fanden Sie die Darstellung?</strong>0">
   <title>Fragebogen - Video</title>
   <script type="module" src="js/supabase-client.js"></script>
   <style>
@@ -97,7 +116,36 @@
     
     <form id="video-questionnaire-form">
       <div class="question">
-        <strong>1. Wie gut konnten Sie die räumliche Struktur der gezeigten Umgebung verstehen? <span class="required">*</span></strong>
+        <strong>1. Hast du schon einmal von „Gaussian Splatting" gehört?</strong>
+        <label><input type="radio" name="gs_known" value="true" required> Ja</label>
+        <label><input type="radio" name="gs_known" value="false"> Nein</label>
+      </div>
+
+      <div class="question">
+        <strong>2. Wie gut schätzt du deine Erfahrung mit 3D-Visualisierung ein?</strong>
+        <select name="vis_experience" required>
+          <option value="">Bitte wählen</option>
+          <option value="1">1 – Keine Erfahrung</option>
+          <option value="2">2 – Wenig</option>
+          <option value="3">3 – Mittel</option>
+          <option value="4">4 – Gut</option>
+          <option value="5">5 – Sehr erfahren</option>
+        </select>
+      </div>
+
+      <div class="question">
+        <strong>3. Warst du schon einmal in der HTWK-Bibliothek?</strong>
+        <label><input type="radio" name="been_to_library" value="true" required> Ja</label>
+        <label><input type="radio" name="been_to_library" value="false"> Nein</label>
+      </div>
+
+      <div class="question">
+        <strong>4. Möchtest du noch etwas zu deinem Vorwissen ergänzen?</strong>
+        <textarea name="freitext" rows="3" placeholder="(optional)"></textarea>
+      </div>
+
+      <div class="question">
+        <strong>5. Wie gut konnten Sie die räumliche Struktur der gezeigten Umgebung verstehen?</strong>
         <label><input type="radio" name="spatial_understanding" value="1" required> 1 - Sehr schlecht</label>
         <label><input type="radio" name="spatial_understanding" value="2"> 2 - Schlecht</label>
         <label><input type="radio" name="spatial_understanding" value="3"> 3 - Mittel</label>
@@ -106,7 +154,7 @@
       </div>
 
       <div class="question">
-        <strong>2. Wie realistisch wirkte die dargestellte Umgebung auf Sie? <span class="required">*</span></strong>
+        <strong>6. Wie realistisch wirkte die dargestellte Umgebung auf Sie?</strong>
         <label><input type="radio" name="realism" value="1" required> 1 - Sehr unrealistisch</label>
         <label><input type="radio" name="realism" value="2"> 2 - Unrealistisch</label>
         <label><input type="radio" name="realism" value="3"> 3 - Mittel</label>
@@ -115,22 +163,32 @@
       </div>
 
       <div class="question">
-        <strong>3. Welche Objekte oder Bereiche sind Ihnen besonders aufgefallen?</strong>
+        <strong>7. Welche Objekte oder Bereiche sind Ihnen besonders aufgefallen?</strong>
         <textarea name="notable_objects" rows="4" placeholder="Beschreiben Sie, was Ihnen aufgefallen ist..."></textarea>
       </div>
 
       <div class="question">
-        <strong>4. Wieviele Tische haben Sie in der Umgebung gesehen?</strong>
+        <strong>8. Wieviele Tische haben Sie in der Umgebung gesehen?</strong>
         <input type="number" name="tables_seen" min="0" placeholder="Anzahl der Tische">
       </div>
 
       <div class="question">
-        <strong>5. Welche Farbe hat das Sofa?</strong>
+        <strong>9. Welches Buch ist dir im Kopf hängen geblieben?</strong>
+        <input type="text" name="memorable_book" placeholder="Titel oder Beschreibung des Buches">
+      </div>
+
+      <div class="question">
+        <strong>10. Wieviele Regalbretter haben die Regale etwa (von unten nach oben)?</strong>
+        <input type="number" name="shelf_levels" min="1" max="20" placeholder="Anzahl der Regalbretter">
+      </div>
+
+      <div class="question">
+        <strong>11. Welche Farbe hat das Sofa?</strong>
         <input type="text" name="sofa_color" placeholder="Farbe des Sofas (z.B. rot, blau, grün)">
       </div>
 
       <div class="question">
-        <strong>6. Wie schätzen Sie die Qualität der 3D-Darstellung ein? <span class="required">*</span></strong>
+        <strong>12. Wie schätzen Sie die Qualität der 3D-Darstellung ein?</strong>
         <label><input type="radio" name="quality" value="1" required> 1 - Sehr schlecht</label>
         <label><input type="radio" name="quality" value="2"> 2 - Schlecht</label>
         <label><input type="radio" name="quality" value="3"> 3 - Mittel</label>
@@ -139,7 +197,7 @@
       </div>
 
       <div class="question">
-        <strong>7. Haben Sie das Gefühl, dass Sie sich in der Umgebung orientieren könnten?</strong>
+        <strong>13. Haben Sie das Gefühl, dass Sie sich in der Umgebung orientieren könnten?</strong>
         <label><input type="radio" name="orientation_confidence" value="1" required> 1 - Überhaupt nicht</label>
         <label><input type="radio" name="orientation_confidence" value="2"> 2 - Eher nicht</label>
         <label><input type="radio" name="orientation_confidence" value="3"> 3 - Teilweise</label>
@@ -148,7 +206,7 @@
       </div>
 
       <div class="question">
-        <strong>8. Zusätzliche Kommentare oder Beobachtungen:</strong>
+        <strong>14. Zusätzliche Kommentare oder Beobachtungen:</strong>
         <textarea name="additional_comments" rows="3" placeholder="(optional)"></textarea>
       </div>
 
@@ -164,10 +222,16 @@
       const form = e.target
       
       const formData = {
+        gs_known: form.gs_known.value === "true",
+        vis_experience: parseInt(form.vis_experience.value),
+        been_to_library: form.been_to_library.value === "true",
+        freitext: form.freitext.value,
         spatial_understanding: parseInt(form.spatial_understanding.value),
         realism: parseInt(form.realism.value),
         notable_objects: form.notable_objects.value,
         tables_seen: form.tables_seen.value ? parseInt(form.tables_seen.value) : null,
+        memorable_book: form.memorable_book.value,
+        shelf_levels: form.shelf_levels.value ? parseInt(form.shelf_levels.value) : null,
         sofa_color: form.sofa_color.value,
         quality: parseInt(form.quality.value),
         orientation_confidence: parseInt(form.orientation_confidence.value),

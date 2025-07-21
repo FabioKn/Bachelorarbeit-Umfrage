@@ -157,7 +157,7 @@
     
     <!-- Vorherige Antworten anzeigen -->
     <div class="section">
-      <h3>📋 Ihre bisherigen Antworten</h3>
+      <h3>Ihre bisherigen Antworten</h3>
       <div id="previousAnswers">
         <p>Lade vorherige Antworten...</p>
       </div>
@@ -166,7 +166,7 @@
     <form id="final-questionnaire-form">
       <!-- Vergleich zwischen Video und interaktiver Erkundung -->
       <div class="section comparison-section">
-        <h3>🔄 Vergleich: Video vs. Interaktive Erkundung</h3>
+        <h3>Vergleich: Video vs. Interaktive Erkundung</h3>
         
         <div class="question">
           <strong>1. Wie unterschied sich Ihr Verständnis der Umgebung zwischen dem Video und der interaktiven Erkundung? <span class="required">*</span></strong>
@@ -204,7 +204,7 @@
 
       <!-- Räumliche Kognition -->
       <div class="section">
-        <h3>🧠 Räumliche Wahrnehmung</h3>
+        <h3>Räumliche Wahrnehmung</h3>
         
         <div class="question">
           <strong>4. Wie gut können Sie sich jetzt in der Umgebung orientieren? <span class="required">*</span></strong>
@@ -232,7 +232,17 @@
         </div>
 
         <div class="question">
-          <strong>7. Denken Sie an die Anfangsposition zurück. Wo befand sich das Sofa in Bezug zu Ihnen?</strong>
+          <strong>7. Welches Buch ist dir im Kopf hängen geblieben?</strong>
+          <input type="text" name="memorable_book_final" placeholder="Titel oder Beschreibung des Buches">
+        </div>
+
+        <div class="question">
+          <strong>8. Wieviele Regalbretter haben die Regale etwa (von unten nach oben)?</strong>
+          <input type="number" name="shelf_levels_final" min="1" max="20" placeholder="Anzahl der Regalbretter">
+        </div>
+
+        <div class="question">
+          <strong>9. Denken Sie an die Anfangsposition zurück. Wo befand sich das Sofa in Bezug zu Ihnen?</strong>
           <label><input type="radio" name="sofa_position" value="left" required> Links</label>
           <label><input type="radio" name="sofa_position" value="right"> Rechts</label>
           <label><input type="radio" name="sofa_position" value="center"> In der Mitte</label>
@@ -241,7 +251,7 @@
         </div>
         
         <div class="question">
-          <strong>8. Wo befand sich das Sofa im Raum?</strong>
+          <strong>10. Wo befand sich das Sofa im Raum?</strong>
           <label><input type="radio" name="sofa_location" value="left_wall" required> An der linken Wand</label>
           <label><input type="radio" name="sofa_location" value="right_wall"> An der rechten Wand</label>
           <label><input type="radio" name="sofa_location" value="center"> In der Mitte des Raumes</label>
@@ -252,10 +262,10 @@
 
       <!-- Benutzererfahrung -->
       <div class="section">
-        <h3>💻 Benutzererfahrung</h3>
+        <h3>Benutzererfahrung</h3>
         
         <div class="question">
-          <strong>9. Wie intuitiv war die Navigation in der 3D-Umgebung? <span class="required">*</span></strong>
+          <strong>11. Wie intuitiv war die Navigation in der 3D-Umgebung?</strong>
           <label><input type="radio" name="navigation_ease" value="1" required> 1 - Sehr schwierig</label>
           <label><input type="radio" name="navigation_ease" value="2"> 2 - Schwierig</label>
           <label><input type="radio" name="navigation_ease" value="3"> 3 - Mittelmäßig</label>
@@ -264,7 +274,7 @@
         </div>
 
         <div class="question">
-          <strong>10. Hatten Sie technische Probleme während der Erkundung?</strong>
+          <strong>12. Hatten Sie technische Probleme während der Erkundung?</strong>
           <label><input type="checkbox" name="technical_issues" value="loading_slow"> Langsame Ladezeiten</label>
           <label><input type="checkbox" name="technical_issues" value="lag"> Ruckelige Darstellung</label>
           <label><input type="checkbox" name="technical_issues" value="controls"> Probleme mit der Steuerung</label>
@@ -278,7 +288,7 @@
         <h3>⭐ Abschließende Bewertung</h3>
         
         <div class="question">
-          <strong>11. Gesamtbewertung der Erfahrung:</strong>
+          <strong>13. Gesamtbewertung der Erfahrung:</strong>
           <div class="slider-container">
             <label for="overall_rating">Gesamteindruck (1 = sehr schlecht, 10 = ausgezeichnet):</label>
             <input type="range" id="overall_rating" name="overall_rating" min="1" max="10" value="5" class="slider">
@@ -291,12 +301,12 @@
         </div>
 
         <div class="question">
-          <strong>12. Abschließende Kommentare, Vorschläge oder Kritik:</strong>
+          <strong>14. Abschließende Kommentare, Vorschläge oder Kritik:</strong>
           <textarea name="final_comments" rows="5" placeholder="Teilen Sie Ihre Gedanken zur gesamten Erfahrung mit..."></textarea>
         </div>
       </div>
 
-      <button type="submit" class="submit">🏁 Studie abschließen</button>
+      <button type="submit" class="submit">Studie abschließen</button>
     </form>
   </div>
 
@@ -359,6 +369,8 @@
         room_length: form.room_length.value ? parseInt(form.room_length.value) : null,
         room_width: form.room_width.value ? parseInt(form.room_width.value) : null,
         room_height: form.room_height.value ? parseInt(form.room_height.value) : null,
+        memorable_book_final: form.memorable_book_final.value,
+        shelf_levels_final: form.shelf_levels_final.value ? parseInt(form.shelf_levels_final.value) : null,
         sofa_position: form.sofa_position.value,
         sofa_location: form.sofa_location.value,
         navigation_ease: parseInt(form.navigation_ease.value),
