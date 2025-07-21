@@ -154,14 +154,7 @@
     </header>
     
     <h2>Abschlussfragebogen</h2>
-    
-    <!-- Vorherige Antworten anzeigen -->
-    <div class="section">
-      <h3>Ihre bisherigen Antworten</h3>
-      <div id="previousAnswers">
-        <p>Lade vorherige Antworten...</p>
-      </div>
-    </div>
+
     
     <form id="final-questionnaire-form">
       <!-- Vergleich zwischen Video und interaktiver Erkundung -->
@@ -311,7 +304,7 @@
   </div>
 
   <script type="module">
-    import { loadPreviousAnswers, submitFinalQuestionnaire, updatePreviousAnswer } from './js/supabase-client.js'
+    import {submitFinalQuestionnaire} from './js/supabase-client.js'
 
     // Slider-Updates
     document.getElementById('realism_interactive').addEventListener('input', (e) => {
@@ -322,31 +315,7 @@
       document.getElementById('overallValue').textContent = e.target.value;
     });
 
-    // Vorherige Antworten laden
-    async function displayPreviousAnswers() {
-      const answers = await loadPreviousAnswers();
-      const container = document.getElementById('previousAnswers');
-      
-      if (answers && answers.length > 0) {
-        container.innerHTML = answers.map(answer => `
-          <div class="previous-answers">
-            <h4>${answer.type} <button class="edit-button" onclick="editAnswer('${answer.type}', '${answer.id}')">Bearbeiten</button></h4>
-            <p>${JSON.stringify(answer.data, null, 2).replace(/[{},"]/g, '').replace(/\n/g, '<br>')}</p>
-          </div>
-        `).join('');
-      } else {
-        container.innerHTML = '<p>Keine vorherigen Antworten gefunden.</p>';
-      }
-    }
 
-    // Antwort bearbeiten
-    window.editAnswer = function(type, id) {
-      const newValue = prompt(`Neue Antwort für ${type}:`);
-      if (newValue) {
-        updatePreviousAnswer(id, { updated_value: newValue });
-        displayPreviousAnswers(); // Refresh
-      }
-    }
 
     // Form submission
     document.getElementById('final-questionnaire-form').addEventListener('submit', async (e) => {
@@ -385,10 +354,6 @@
       window.location.href = "thank-you.html"
     })
 
-    // Beim Laden die vorherigen Antworten anzeigen
-    window.addEventListener('load', () => {
-      displayPreviousAnswers();
-    });
   </script>
 </body>
 </html>
