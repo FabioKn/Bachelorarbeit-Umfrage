@@ -34,12 +34,30 @@
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      position: relative;
     }
     
     #videoFrame {
       width: 100%;
       height: 500px;
       border: none;
+    }
+    
+    .video-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      z-index: 10;
+      border-radius: 6px;
     }
     
     .instructions {
@@ -124,6 +142,12 @@
               allow="fullscreen; xr-spatial-tracking" 
               src="https://superspl.at/s?id=29b108b9">
       </iframe>
+      <div class="video-overlay" id="videoOverlay">
+        <div>
+          <p>Video-Betrachtung beendet!</p>
+          <p>Bitte klicken Sie auf "Weiter zum Fragebogen"</p>
+        </div>
+      </div>
     </div>
     <div class="time-display" id="timeDisplay">Video wird geladen...</div>
     <div class="progress-bar">
@@ -135,7 +159,7 @@
     </button>
     
     <div class="instructions" style="margin-top: 30px;">
-      <p><em>Hinweis: Der "Weiter"-Button wird nach 20 Sekunden automatisch erscheinen.</em></p>
+      <p><em>Hinweis: Der Timer startet automatisch, sobald das Video vollständig geladen wurde. Nach 20 Sekunden wird das Video gesperrt und Sie können zum Fragebogen weiter.</em></p>
     </div>
   </div>
 
@@ -149,9 +173,12 @@
 
     let timeElapsed = 0;
     let timer;
+    let videoLoaded = false;
     const videoDuration = 20; // 20 Sekunden
 
     function startTimer() {
+      if (!videoLoaded) return; // Nur starten wenn Video geladen ist
+      
       timer = setInterval(() => {
         timeElapsed++;
         updateDisplay();
@@ -159,6 +186,7 @@
         if (timeElapsed >= videoDuration) {
           clearInterval(timer);
           showContinueButton();
+          lockVideo();
         }
       }, 1000);
     }
@@ -178,10 +206,30 @@
       document.getElementById('continueBtn').style.display = 'inline-block';
     }
 
-    // Timer starten, wenn die Seite geladen ist
+    function lockVideo() {
+      document.getElementById('videoOverlay').style.display = 'flex';
+    }
+
+    // Video-Load-Event abfangen
+    document.getElementById('videoFrame').addEventListener('load', () => {
+      videoLoaded = true;
+      document.getElementById('timeDisplay').textContent = 'Video geladen! Timer startet in 2 Sekunden...';
+      
+      // 2 Sekunden warten, dann Timer starten
+      setTimeout(() => {
+        startTimer();
+      }, 2000);
+    });
+
+    // Fallback: Timer starten falls load-Event nicht funktioniert
     window.addEventListener('load', () => {
-      setTimeout(startTimer, 2000); // 2 Sekunden Verzögerung für das Laden
-      document.getElementById('timeDisplay').textContent = 'Video startet in 2 Sekunden...';
+      setTimeout(() => {
+        if (!videoLoaded) {
+          document.getElementById('timeDisplay').textContent = 'Video wird geladen... Timer startet automatisch.';
+          videoLoaded = true;
+          startTimer();
+        }
+      }, 5000); // 5 Sekunden Fallback
     });
 
     // Continue-Funktion global verfügbar machen
