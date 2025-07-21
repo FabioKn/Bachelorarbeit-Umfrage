@@ -35,57 +35,12 @@
       overflow: hidden;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       position: relative;
-      min-height: 500px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #f8f9fa;
     }
     
     #videoFrame {
       width: 100%;
       height: 500px;
       border: none;
-      display: none; /* Versteckt bis geladen */
-    }
-    
-    #videoFrame.loaded {
-      display: block;
-    }
-    
-    .loading-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 500px;
-      width: 100%;
-      color: #666;
-      font-size: 18px;
-      position: absolute;
-      top: 0;
-      left: 0;
-      background-color: #f8f9fa;
-      border-radius: 6px;
-    }
-    
-    .loading-placeholder.hidden {
-      display: none;
-    }
-    
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #e0e0e0;
-      border-top: 4px solid #007bff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
     }
     
     .video-overlay {
@@ -164,14 +119,6 @@
       #videoFrame {
         height: 300px;
       }
-      
-      .loading-placeholder {
-        height: 300px;
-      }
-      
-      .loading-placeholder div:first-child {
-        font-size: 16px;
-      }
     }
   </style>
 </head>
@@ -191,19 +138,10 @@
     </div>
     
     <div class="video-container">
-      <div class="loading-placeholder" id="loadingPlaceholder">
-        <div class="loading-spinner"></div>
-        <div id="loadingText">3D-Video wird geladen...</div>
-        <div style="font-size: 14px; color: #888; margin-top: 10px;">
-          Bitte warten Sie, während die 68 MB große Datei geladen wird
-        </div>
-      </div>
-      
       <iframe id="videoFrame" 
               allow="fullscreen; xr-spatial-tracking" 
               src="https://superspl.at/s?id=29b108b9">
       </iframe>
-      
       <div class="video-overlay" id="videoOverlay">
         <div>
           <p>Video-Betrachtung beendet!</p>
@@ -211,7 +149,7 @@
         </div>
       </div>
     </div>
-    <div class="time-display" id="timeDisplay">Lädt 3D-Video...</div>
+    <div class="time-display" id="timeDisplay">Video wird geladen...</div>
     <div class="progress-bar">
       <div class="progress-fill" id="progressFill"></div>
     </div>
@@ -237,7 +175,6 @@
     let timer;
     let videoLoaded = false;
     const videoDuration = 20; // 20 Sekunden
-    const videoLoadTime = 15; // 15 Sekunden Ladezeit angenommen
 
     function startTimer() {
       if (!videoLoaded) return;
@@ -273,164 +210,19 @@
       document.getElementById('videoOverlay').style.display = 'flex';
     }
 
-    // Optimierte Video-Load-Detection für .ply Dateien
-    let loadStartTime = Date.now();
-    let videoLoadDetected = false;
-    let initialDataTransfer = 0;
-    let plyLoadingDetected = false;
-    let statusUpdateInterval;
-    
-    // Status-Updates für den Benutzer mit spezifischen PLY-Meldungen
-    function updateLoadingStatus() {
-      const loadingText = document.getElementById('loadingText');
-      let loadingMessages = [
-        '3D-Video wird geladen...',
-        'Lade scene.compressed.ply (68 MB)...',
-        'Gaussian Splatting wird initialisiert...',
-        'Vorbereitung fast abgeschlossen...',
-        'Rendering wird gestartet...'
-      ];
-      
-      let messageIndex = 0;
-      statusUpdateInterval = setInterval(() => {
-        if (!videoLoadDetected && loadingText) {
-          loadingText.textContent = loadingMessages[messageIndex % loadingMessages.length];
-          messageIndex++;
-        }
-      }, 2000); // Alle 2 Sekunden
-    }
-    
-    // Überwache gezielt die scene.compressed.ply Datei
-    function monitorPlyFileLoad() {
-      console.log('Starting PLY file monitoring for scene.compressed.ply...');
-      
-      // Überwache alle 1 Sekunde für präzisere Erkennung
-      const checkInterval = setInterval(() => {
-        const perfEntries = performance.getEntriesByType('resource');
-        
-        // Suche spezifisch nach der bekannten CloudFront PLY-Datei
-        const plyFiles = perfEntries.filter(entry => {
-          const url = entry.name.toLowerCase();
-          return url.includes('scene.compressed.ply') ||
-                 url.includes('d28zzqy0iyovbz.cloudfront.net') ||
-                 url.includes('/29b108b9/') ||
-                 (url.includes('.ply') && entry.transferSize > 50000000) || // Mindestens 50MB wie erwartet
-                 (url.includes('cloudfront') && entry.transferSize > 50000000);
-        });
-        
-        // Prüfe ob die große PLY-Datei vollständig geladen wurde
-        const loadedPlyFiles = plyFiles.filter(entry => {
-          const isCompleted = entry.responseEnd > 0 && entry.duration > 0;
-          const isExpectedSize = entry.transferSize > 50000000; // ~68MB wie in den Netzwerk-Details
-          return isCompleted && isExpectedSize;
-        });
-        
-        if (loadedPlyFiles.length > 0 && !videoLoadDetected) {
-          console.log('🎯 scene.compressed.ply loaded successfully!', loadedPlyFiles);
-          loadedPlyFiles.forEach(file => {
-            console.log(`✅ ${file.name}: ${(file.transferSize / 1024 / 1024).toFixed(2)} MB in ${(file.duration / 1000).toFixed(1)}s`);
-          });
-          
-          videoLoadDetected = true;
-          clearInterval(checkInterval);
-          if (statusUpdateInterval) clearInterval(statusUpdateInterval);
-          onVideoReady();
-          return;
-        }
-        
-        // Erweiterte Fallback-Suche nach CloudFront Traffic
-        const cloudFrontFiles = perfEntries.filter(entry => {
-          const url = entry.name.toLowerCase();
-          return (url.includes('cloudfront.net') || url.includes('amazonaws')) && 
-                 entry.transferSize > 40000000; // Mindestens 40MB
-        });
-        
-        const completedCloudFrontFiles = cloudFrontFiles.filter(entry => 
-          entry.responseEnd > 0 && entry.duration > 0
-        );
-        
-        if (completedCloudFrontFiles.length > 0 && !videoLoadDetected) {
-          console.log('📡 Large CloudFront file detected - likely the PLY file:', completedCloudFrontFiles);
-          videoLoadDetected = true;
-          clearInterval(checkInterval);
-          if (statusUpdateInterval) clearInterval(statusUpdateInterval);
-          onVideoReady();
-          return;
-        }
-        
-        // Debug-Output für besseres Monitoring
-        const allLargeFiles = perfEntries.filter(entry => entry.transferSize > 10000000);
-        if (allLargeFiles.length > 0) {
-          console.log('📊 Large files detected:', allLargeFiles.map(f => ({
-            url: f.name.substring(f.name.lastIndexOf('/') + 1),
-            size: `${(f.transferSize / 1024 / 1024).toFixed(1)}MB`,
-            complete: f.responseEnd > 0
-          })));
-        }
-        
-      }, 1000); // Jede Sekunde prüfen für schnellere Reaktion
-      
-      // Stoppe Monitoring nach 30 Sekunden mit Fallback
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        if (!videoLoadDetected) {
-          console.log('⏰ Fallback: Assuming video ready after 30s monitoring timeout');
-          videoLoadDetected = true;
-          if (statusUpdateInterval) clearInterval(statusUpdateInterval);
-          onVideoReady();
-        }
-      }, 30000);
-    }
-    
-    // Alternative: Direkte iframe Content Monitoring
-    function monitorIframeContent() {
-      const iframe = document.getElementById('videoFrame');
-      
-      try {
-        // Iframe Load Event
-        iframe.addEventListener('load', () => {
-          console.log('Iframe loaded, starting PLY file monitoring...');
-          
-          // Starte das optimierte PLY-Monitoring
-          setTimeout(() => {
-            monitorPlyFileLoad();
-          }, 2000); // 2 Sekunden warten, damit iframe initialisiert ist
-        });
-      } catch (e) {
-        console.log('Error setting up iframe monitoring:', e);
-        // Fallback bei Fehlern
-        setTimeout(() => {
-          monitorPlyFileLoad();
-        }, 3000);
-      }
-    }
-
     function onVideoReady() {
       if (videoLoaded) return;
       
       videoLoaded = true;
+      document.getElementById('timeDisplay').textContent = 'Video geladen! Timer startet automatisch...';
       
-      // Stoppe Lade-Updates
-      if (statusUpdateInterval) clearInterval(statusUpdateInterval);
-      
-      // Verstecke Loading-Placeholder und zeige Video
-      const loadingPlaceholder = document.getElementById('loadingPlaceholder');
-      const videoFrame = document.getElementById('videoFrame');
-      const timeDisplay = document.getElementById('timeDisplay');
-      
-      loadingPlaceholder.classList.add('hidden');
-      videoFrame.classList.add('loaded');
-      
-      timeDisplay.textContent = 'Video geladen! Timer startet automatisch...';
-      
-      // Kurze Pause damit der Benutzer die Änderung sieht
       setTimeout(() => {
-        timeDisplay.textContent = 'Timer läuft: 0 / 20 Sekunden';
+        document.getElementById('timeDisplay').textContent = 'Timer läuft: 0 / 20 Sekunden';
         startTimer();
       }, 2000);
     }
 
-    // Browser Console Message Detection für Third-Party Loading
+    // Console Message Detection für Third-Party Loading
     let originalConsole = console.log;
     let originalConsoleInfo = console.info;
     let originalConsoleWarn = console.warn;
@@ -473,34 +265,20 @@
       }
     }
 
-    // Einfache Initialisierung mit Console-Überwachung
+    // Einfache Initialisierung mit NUR Console-Überwachung
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('Starting video timer with console message detection...');
+      console.log('Starting video timer with console message detection only...');
       
       // Starte Console-Überwachung
       interceptConsoleMessages();
       
-      // iframe Load Event (Backup-Methode)
-      const iframe = document.getElementById('videoFrame');
-      iframe.addEventListener('load', () => {
-        console.log('Iframe loaded');
-        
-        // Warte 10 Sekunden nach iframe load (verkürzt, da Console-Detection primär)
-        setTimeout(() => {
-          if (!videoLoaded && !consoleMessageDetected) {
-            console.log('Backup: Assuming video ready after 10 seconds without console detection');
-            onVideoReady();
-          }
-        }, 10000);
-      });
-      
-      // Fallback für sehr langsame Verbindungen
+      // Fallback-Timer: Falls keine Console-Meldung kommt
       setTimeout(() => {
-        if (!videoLoaded) {
-          console.log('Emergency fallback after 25 seconds');
+        if (!videoLoaded && !consoleMessageDetected) {
+          console.log('⏰ Fallback: No console message detected, starting after 20 seconds');
           onVideoReady();
         }
-      }, 25000);
+      }, 20000);
     });
 
     // Continue-Funktion global verfügbar machen
