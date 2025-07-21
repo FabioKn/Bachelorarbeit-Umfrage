@@ -35,12 +35,57 @@
       overflow: hidden;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       position: relative;
+      min-height: 500px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f8f9fa;
     }
     
     #videoFrame {
       width: 100%;
       height: 500px;
       border: none;
+      display: none; /* Versteckt bis geladen */
+    }
+    
+    #videoFrame.loaded {
+      display: block;
+    }
+    
+    .loading-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 500px;
+      width: 100%;
+      color: #666;
+      font-size: 18px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+    }
+    
+    .loading-placeholder.hidden {
+      display: none;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e0e0e0;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
     
     .video-overlay {
@@ -119,6 +164,14 @@
       #videoFrame {
         height: 300px;
       }
+      
+      .loading-placeholder {
+        height: 300px;
+      }
+      
+      .loading-placeholder div:first-child {
+        font-size: 16px;
+      }
     }
   </style>
 </head>
@@ -138,10 +191,19 @@
     </div>
     
     <div class="video-container">
+      <div class="loading-placeholder" id="loadingPlaceholder">
+        <div class="loading-spinner"></div>
+        <div id="loadingText">3D-Video wird geladen...</div>
+        <div style="font-size: 14px; color: #888; margin-top: 10px;">
+          Bitte warten Sie, während die 68 MB große Datei geladen wird
+        </div>
+      </div>
+      
       <iframe id="videoFrame" 
               allow="fullscreen; xr-spatial-tracking" 
               src="https://superspl.at/s?id=29b108b9">
       </iframe>
+      
       <div class="video-overlay" id="videoOverlay">
         <div>
           <p>Video-Betrachtung beendet!</p>
@@ -149,7 +211,7 @@
         </div>
       </div>
     </div>
-    <div class="time-display" id="timeDisplay">Video wird geladen...</div>
+    <div class="time-display" id="timeDisplay">Lädt 3D-Video...</div>
     <div class="progress-bar">
       <div class="progress-fill" id="progressFill"></div>
     </div>
@@ -219,22 +281,22 @@
     
     // Status-Updates für den Benutzer mit spezifischen PLY-Meldungen
     function updateLoadingStatus() {
-      const timeDisplay = document.getElementById('timeDisplay');
+      const loadingText = document.getElementById('loadingText');
       let loadingMessages = [
-        'Video wird geladen...',
-        'Lade 3D-Szene (68 MB)...',
-        'Lade scene.compressed.ply...',
-        'Gaussian Splatting wird vorbereitet...',
-        'Fast fertig...'
+        '3D-Video wird geladen...',
+        'Lade scene.compressed.ply (68 MB)...',
+        'Gaussian Splatting wird initialisiert...',
+        'Vorbereitung fast abgeschlossen...',
+        'Rendering wird gestartet...'
       ];
       
       let messageIndex = 0;
       statusUpdateInterval = setInterval(() => {
-        if (!videoLoadDetected) {
-          timeDisplay.textContent = loadingMessages[messageIndex % loadingMessages.length];
+        if (!videoLoadDetected && loadingText) {
+          loadingText.textContent = loadingMessages[messageIndex % loadingMessages.length];
           messageIndex++;
         }
-      }, 2500); // Alle 2.5 Sekunden für langsamere Rotation
+      }, 2000); // Alle 2 Sekunden
     }
     
     // Überwache gezielt die scene.compressed.ply Datei
@@ -346,11 +408,23 @@
       if (videoLoaded) return; // Bereits aktiviert
       
       videoLoaded = true;
-      document.getElementById('timeDisplay').textContent = 'Video geladen! Timer startet automatisch...';
       
-      // Kurze Pause damit der Benutzer es sieht
+      // Stoppe Lade-Updates
+      if (statusUpdateInterval) clearInterval(statusUpdateInterval);
+      
+      // Verstecke Loading-Placeholder und zeige Video
+      const loadingPlaceholder = document.getElementById('loadingPlaceholder');
+      const videoFrame = document.getElementById('videoFrame');
+      const timeDisplay = document.getElementById('timeDisplay');
+      
+      loadingPlaceholder.classList.add('hidden');
+      videoFrame.classList.add('loaded');
+      
+      timeDisplay.textContent = 'Video geladen! Timer startet automatisch...';
+      
+      // Kurze Pause damit der Benutzer die Änderung sieht
       setTimeout(() => {
-        document.getElementById('timeDisplay').textContent = 'Timer läuft: 0 / 20 Sekunden';
+        timeDisplay.textContent = 'Timer läuft: 0 / 20 Sekunden';
         startTimer();
       }, 1500);
     }
