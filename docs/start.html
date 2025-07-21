@@ -43,23 +43,6 @@
       border: none;
     }
     
-    .video-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.8);
-      color: white;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      font-weight: bold;
-      z-index: 10;
-      border-radius: 6px;
-    }
-    
     .instructions {
       margin: 20px 0;
       padding: 20px;
@@ -68,42 +51,24 @@
       border-left: 4px solid #007bff;
     }
     
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background-color: #e0e0e0;
-      border-radius: 4px;
-      margin: 20px 0;
-      overflow: hidden;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background-color: #007bff;
-      width: 0%;
-      transition: width 0.1s ease;
-    }
-    
-    .time-display {
-      margin: 10px 0;
-      font-weight: bold;
-      color: #555;
-    }
-    
     #continueBtn {
       background-color: #28a745;
       color: white;
       border: none;
-      padding: 12px 30px;
-      font-size: 16px;
-      border-radius: 5px;
+      padding: 15px 40px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 8px;
       cursor: pointer;
       margin-top: 20px;
-      display: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
     }
     
     #continueBtn:hover {
       background-color: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     
     /* Mobile responsive */
@@ -133,7 +98,7 @@
     
     <div class="instructions">
       <h3>Aufgabe 1: Video betrachten</h3>
-      <p>Bitte schauen Sie sich das folgende 20-Sekunden-Video aufmerksam an. Das Video zeigt eine 3D-Umgebung, die mit Gaussian Splatting erstellt wurde.</p>
+      <p>Bitte schauen Sie sich das folgende 20-Sekunden-Video einmal aufmerksam an. Das Video zeigt eine 3D-Umgebung, die mit Gaussian Splatting erstellt wurde.</p>
       <p><strong>Wichtig:</strong> Prägen Sie sich die Szene gut ein, da Sie später Fragen dazu beantworten werden.</p>
     </div>
     
@@ -142,25 +107,18 @@
               allow="fullscreen; xr-spatial-tracking" 
               src="https://superspl.at/s?id=29b108b9">
       </iframe>
-      <div class="video-overlay" id="videoOverlay">
-        <div>
-          <p>Video-Betrachtung beendet!</p>
-          <p>Bitte klicken Sie auf "Weiter zum Fragebogen"</p>
-        </div>
-      </div>
     </div>
-    <div class="time-display" id="timeDisplay">Video wird geladen...</div>
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill"></div>
+    <div class="instructions" style="text-align: center; margin: 30px 0;">
+      <p style="font-size: 18px; margin-bottom: 20px;">
+        <strong>Schauen Sie sich das 3D-Video an und klicken Sie dann auf "Weiter zum Fragebogen"</strong>
+      </p>
     </div>
     
-    <button id="continueBtn" onclick="continueToQuestionnaire()">
+    <button id="continueBtn" onclick="continueToQuestionnaire()" style="display: inline-block;">
       Weiter zum Fragebogen →
     </button>
     
-    <div class="instructions" style="margin-top: 30px;">
-      <p><em>Hinweis: Der Timer startet automatisch, sobald das Video vollständig geladen wurde. Nach 20 Sekunden wird das Video gesperrt und Sie können zum Fragebogen weiter.</em></p>
-    </div>
+
   </div>
 
   <script type="module">
@@ -170,213 +128,6 @@
     window.addEventListener('load', async () => {
       await createParticipant()
     })
-
-    let timeElapsed = 0;
-    let timer;
-    let videoLoaded = false;
-    const videoDuration = 20; // 20 Sekunden
-
-    function startTimer() {
-      if (!videoLoaded) return;
-      
-      timer = setInterval(() => {
-        timeElapsed++;
-        updateDisplay();
-        
-        if (timeElapsed >= videoDuration) {
-          clearInterval(timer);
-          showContinueButton();
-          lockVideo();
-        }
-      }, 1000);
-    }
-
-    function updateDisplay() {
-      const remaining = videoDuration - timeElapsed;
-      const progressPercent = (timeElapsed / videoDuration) * 100;
-      
-      document.getElementById('timeDisplay').textContent = 
-        `Verbleibende Zeit: ${remaining} Sekunden`;
-      document.getElementById('progressFill').style.width = `${progressPercent}%`;
-    }
-
-    function showContinueButton() {
-      document.getElementById('timeDisplay').textContent = 'Video beendet!';
-      document.getElementById('progressFill').style.width = '100%';
-      document.getElementById('continueBtn').style.display = 'inline-block';
-    }
-
-    function lockVideo() {
-      document.getElementById('videoOverlay').style.display = 'flex';
-    }
-
-    function onVideoReady() {
-      if (videoLoaded) return;
-      
-      videoLoaded = true;
-      document.getElementById('timeDisplay').textContent = 'Video geladen! Timer startet automatisch...';
-      
-      setTimeout(() => {
-        document.getElementById('timeDisplay').textContent = 'Timer läuft: 0 / 20 Sekunden';
-        startTimer();
-      }, 2000);
-    }
-
-    // Console Message Detection für Browser-Warnungen
-    let originalConsoleLog = console.log;
-    let originalConsoleInfo = console.info;
-    let originalConsoleWarn = console.warn;
-    let originalConsoleError = console.error;
-    let consoleMessageDetected = false;
-
-    function interceptConsoleMessages() {
-      // Überschreibe ALLE console Methoden um Browser-Warnungen zu erkennen
-      console.log = function(...args) {
-        checkForBrowserWarning(args);
-        originalConsoleLog.apply(console, args);
-      };
-      
-      console.info = function(...args) {
-        checkForBrowserWarning(args);
-        originalConsoleInfo.apply(console, args);
-      };
-      
-      console.warn = function(...args) {
-        checkForBrowserWarning(args);
-        originalConsoleWarn.apply(console, args);
-      };
-      
-      console.error = function(...args) {
-        checkForBrowserWarning(args);
-        originalConsoleError.apply(console, args);
-      };
-
-      // Zusätzlich: Observer für Performance Entries als Fallback
-      if ('PerformanceObserver' in window) {
-        try {
-          const observer = new PerformanceObserver((list) => {
-            const entries = list.getEntries();
-            entries.forEach(entry => {
-              if (entry.name && entry.name.includes('superspl.at')) {
-                console.log('🎯 PerformanceObserver detected superspl.at activity');
-                if (!consoleMessageDetected) {
-                  consoleMessageDetected = true;
-                  setTimeout(() => {
-                    if (!videoLoaded) {
-                      console.log('✅ Starting video based on PerformanceObserver detection');
-                      onVideoReady();
-                    }
-                  }, 2000);
-                }
-              }
-            });
-          });
-          observer.observe({ entryTypes: ['resource', 'navigation'] });
-        } catch (e) {
-          console.log('PerformanceObserver not available:', e);
-        }
-      }
-    }
-
-    function checkForBrowserWarning(args) {
-      const message = args.join(' ').toLowerCase();
-      
-      // Prüfe auf die spezifische partitionierte Cookie-Warnung
-      if ((message.includes('superspl.at') && 
-          (message.includes('partitioniert') || message.includes('partitioned') ||
-           message.includes('cookie') || message.includes('speicherzugriff') ||
-           message.includes('drittanbieter') || message.includes('third-party'))) && 
-          !consoleMessageDetected) {
-        
-        console.log('🎯 Browser-Warnung für superspl.at erkannt - Video bereit!');
-        consoleMessageDetected = true;
-        
-        // Sofort Video starten (kürzere Verzögerung)
-        setTimeout(() => {
-          if (!videoLoaded) {
-            console.log('✅ Timer startet basierend auf Browser-Warnung');
-            onVideoReady();
-          }
-        }, 1000); // Nur 1 Sekunde Verzögerung
-      }
-      
-      // Fallback: Auch auf einfache superspl.at Erwähnung reagieren
-      else if (message.includes('superspl.at') && !consoleMessageDetected) {
-        console.log('🎯 superspl.at Aktivität erkannt');
-        consoleMessageDetected = true;
-        
-        setTimeout(() => {
-          if (!videoLoaded) {
-            console.log('✅ Timer startet basierend auf superspl.at Aktivität');
-            onVideoReady();
-          }
-        }, 2000);
-      }
-    }
-
-    // Zusätzlich: Event-Listener für window errors/warnings
-    function setupWindowListeners() {
-      window.addEventListener('error', (event) => {
-        if (event.message && event.message.includes('superspl.at')) {
-          console.log('🎯 Window error mit superspl.at erkannt');
-          if (!consoleMessageDetected) {
-            consoleMessageDetected = true;
-            setTimeout(() => {
-              if (!videoLoaded) {
-                onVideoReady();
-              }
-            }, 1000);
-          }
-        }
-      });
-
-      // Unhandled promise rejections
-      window.addEventListener('unhandledrejection', (event) => {
-        if (event.reason && String(event.reason).includes('superspl.at')) {
-          console.log('🎯 Promise rejection mit superspl.at erkannt');
-          if (!consoleMessageDetected) {
-            consoleMessageDetected = true;
-            setTimeout(() => {
-              if (!videoLoaded) {
-                onVideoReady();
-              }
-            }, 1000);
-          }
-        }
-      });
-    }
-
-    // Erweiterte Initialisierung mit mehreren Detection-Methoden
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('Starting video timer with enhanced browser warning detection...');
-      
-      // Starte Console-Überwachung
-      interceptConsoleMessages();
-      
-      // Starte Window-Event-Listener
-      setupWindowListeners();
-      
-      // Zusätzlich: iframe onload als Trigger für superspl.at Aktivität
-      const iframe = document.getElementById('videoFrame');
-      iframe.addEventListener('load', () => {
-        console.log('iframe loaded - superspl.at should start loading soon...');
-        
-        // Nach iframe load: kurz warten und dann prüfen ob schon Console-Meldung kam
-        setTimeout(() => {
-          if (!consoleMessageDetected) {
-            console.log('🔍 Iframe geladen, aber noch keine Browser-Warnung - warte weiter...');
-          }
-        }, 2000);
-      });
-      
-      // Verkürzter Fallback-Timer: Falls gar keine Erkennung
-      setTimeout(() => {
-        if (!videoLoaded && !consoleMessageDetected) {
-          console.log('⏰ Fallback: Keine Browser-Warnung erkannt, starte nach 15 Sekunden');
-          onVideoReady();
-        }
-      }, 15000); // Verkürzt auf 15 Sekunden
-    });
 
     // Continue-Funktion global verfügbar machen
     window.continueToQuestionnaire = function() {
