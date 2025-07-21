@@ -217,14 +217,15 @@
     let plyLoadingDetected = false;
     let statusUpdateInterval;
     
-    // Status-Updates für den Benutzer
+    // Status-Updates für den Benutzer mit spezifischen PLY-Meldungen
     function updateLoadingStatus() {
       const timeDisplay = document.getElementById('timeDisplay');
       let loadingMessages = [
         'Video wird geladen...',
-        'Lade 3D-Daten...',
-        'Lade Gaussian Splatting Datei...',
-        'Vorbereitung fast abgeschlossen...'
+        'Lade 3D-Szene (68 MB)...',
+        'Lade scene.compressed.ply...',
+        'Gaussian Splatting wird vorbereitet...',
+        'Fast fertig...'
       ];
       
       let messageIndex = 0;
@@ -233,37 +234,38 @@
           timeDisplay.textContent = loadingMessages[messageIndex % loadingMessages.length];
           messageIndex++;
         }
-      }, 3000);
+      }, 2500); // Alle 2.5 Sekunden für langsamere Rotation
     }
     
-    // Überwache gezielt die .ply Datei (scene.compressed.ply)
+    // Überwache gezielt die scene.compressed.ply Datei
     function monitorPlyFileLoad() {
-      console.log('Starting PLY file monitoring...');
+      console.log('Starting PLY file monitoring for scene.compressed.ply...');
       
-      // Überwache alle 1.5 Sekunden
+      // Überwache alle 1 Sekunde für präzisere Erkennung
       const checkInterval = setInterval(() => {
         const perfEntries = performance.getEntriesByType('resource');
         
-        // Suche spezifisch nach .ply Dateien
+        // Suche spezifisch nach der bekannten CloudFront PLY-Datei
         const plyFiles = perfEntries.filter(entry => {
           const url = entry.name.toLowerCase();
-          return url.includes('.ply') || 
-                 url.includes('scene.compressed') ||
-                 url.includes('gaussian') ||
-                 (url.includes('superspl.at') && entry.transferSize > 10000000); // Große supersplat Dateien
+          return url.includes('scene.compressed.ply') ||
+                 url.includes('d28zzqy0iyovbz.cloudfront.net') ||
+                 url.includes('/29b108b9/') ||
+                 (url.includes('.ply') && entry.transferSize > 50000000) || // Mindestens 50MB wie erwartet
+                 (url.includes('cloudfront') && entry.transferSize > 50000000);
         });
         
-        // Prüfe ob eine große .ply Datei vollständig geladen wurde
+        // Prüfe ob die große PLY-Datei vollständig geladen wurde
         const loadedPlyFiles = plyFiles.filter(entry => {
           const isCompleted = entry.responseEnd > 0 && entry.duration > 0;
-          const isLarge = entry.transferSize > 5000000; // Mindestens 5MB
-          return isCompleted && isLarge;
+          const isExpectedSize = entry.transferSize > 50000000; // ~68MB wie in den Netzwerk-Details
+          return isCompleted && isExpectedSize;
         });
         
         if (loadedPlyFiles.length > 0 && !videoLoadDetected) {
-          console.log('PLY file(s) loaded successfully:', loadedPlyFiles);
+          console.log('🎯 scene.compressed.ply loaded successfully!', loadedPlyFiles);
           loadedPlyFiles.forEach(file => {
-            console.log(`- ${file.name}: ${(file.transferSize / 1024 / 1024).toFixed(2)} MB in ${file.duration.toFixed(0)}ms`);
+            console.log(`✅ ${file.name}: ${(file.transferSize / 1024 / 1024).toFixed(2)} MB in ${(file.duration / 1000).toFixed(1)}s`);
           });
           
           videoLoadDetected = true;
@@ -273,39 +275,48 @@
           return;
         }
         
-        // Fallback: Überwache gesamtes Transfer-Volumen
-        const totalTransfer = perfEntries.reduce((total, entry) => total + (entry.transferSize || 0), 0);
-        const supersplatTransfer = perfEntries
-          .filter(entry => 
-            entry.name.includes('superspl.at') || 
-            entry.name.includes('cloudfront') ||
-            entry.name.includes('amazonaws')
-          )
-          .reduce((total, entry) => total + (entry.transferSize || 0), 0);
+        // Erweiterte Fallback-Suche nach CloudFront Traffic
+        const cloudFrontFiles = perfEntries.filter(entry => {
+          const url = entry.name.toLowerCase();
+          return (url.includes('cloudfront.net') || url.includes('amazonaws')) && 
+                 entry.transferSize > 40000000; // Mindestens 40MB
+        });
         
-        console.log(`Network activity - Total: ${(totalTransfer / 1024 / 1024).toFixed(1)}MB, Supersplat: ${(supersplatTransfer / 1024 / 1024).toFixed(1)}MB`);
+        const completedCloudFrontFiles = cloudFrontFiles.filter(entry => 
+          entry.responseEnd > 0 && entry.duration > 0
+        );
         
-        // Wenn viel Supersplat-Traffic erkannt wird (wahrscheinlich die .ply Datei)
-        if (supersplatTransfer > 20000000 && !videoLoadDetected) {
-          console.log('Large Supersplat transfer detected - assuming PLY file loaded');
+        if (completedCloudFrontFiles.length > 0 && !videoLoadDetected) {
+          console.log('📡 Large CloudFront file detected - likely the PLY file:', completedCloudFrontFiles);
           videoLoadDetected = true;
           clearInterval(checkInterval);
           if (statusUpdateInterval) clearInterval(statusUpdateInterval);
           onVideoReady();
+          return;
         }
         
-      }, 1500); // Alle 1.5 Sekunden prüfen
+        // Debug-Output für besseres Monitoring
+        const allLargeFiles = perfEntries.filter(entry => entry.transferSize > 10000000);
+        if (allLargeFiles.length > 0) {
+          console.log('📊 Large files detected:', allLargeFiles.map(f => ({
+            url: f.name.substring(f.name.lastIndexOf('/') + 1),
+            size: `${(f.transferSize / 1024 / 1024).toFixed(1)}MB`,
+            complete: f.responseEnd > 0
+          })));
+        }
+        
+      }, 1000); // Jede Sekunde prüfen für schnellere Reaktion
       
-      // Stoppe Monitoring nach 25 Sekunden mit Fallback
+      // Stoppe Monitoring nach 30 Sekunden mit Fallback
       setTimeout(() => {
         clearInterval(checkInterval);
         if (!videoLoadDetected) {
-          console.log('Fallback: Assuming video ready after 25s monitoring timeout');
+          console.log('⏰ Fallback: Assuming video ready after 30s monitoring timeout');
           videoLoadDetected = true;
           if (statusUpdateInterval) clearInterval(statusUpdateInterval);
           onVideoReady();
         }
-      }, 25000);
+      }, 30000);
     }
     
     // Alternative: Direkte iframe Content Monitoring
