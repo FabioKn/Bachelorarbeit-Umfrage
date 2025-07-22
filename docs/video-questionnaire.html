@@ -67,6 +67,26 @@
       color: #0066cc;
     }
     
+    .current-task-highlight {
+      background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      animation: pulse 2s infinite;
+      border: 3px solid #fff;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+      50% { transform: scale(1.02); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+      100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    }
+    
     .distance-input {
       margin: 20px 0;
       padding: 15px;
@@ -270,6 +290,10 @@
         <h3>Räumliche Lokalisierungsaufgaben</h3>
         <p>Basierend auf dem Video, das du gerade gesehen hast:</p>
         
+        <div class="current-task-highlight" id="current-task-video">
+          🎯 Aufgabe wird geladen...
+        </div>
+        
         <div class="task-status" id="spatial-status">Lade Bild...</div>
         <p id="spatial-instruction">Bitte klicke auf das gewünschte Objekt.</p>
         
@@ -352,6 +376,7 @@
         redrawCanvas();
         document.getElementById("spatial-instruction").textContent = spatialImages[index].instruction;
         document.getElementById("spatial-status").textContent = `Klicke auf: ${spatialImages[index].label.replace('_video', '')}`;
+        document.getElementById("current-task-video").textContent = `🎯 Aufgabe ${index + 1}/3: ${spatialImages[index].instruction}`;
       };
       spatialImage.onerror = () => {
         document.getElementById("spatial-status").textContent = `Fehler beim Laden von: ${spatialImages[index].src}`;
@@ -455,6 +480,8 @@
       } else {
         spatialTasksCompleted = true;
         document.getElementById("spatial-status").textContent = "Alle Objekte markiert! Bitte schätze noch die Distanz ein.";
+        document.getElementById("current-task-video").textContent = "✅ Alle Aufgaben abgeschlossen!";
+        document.getElementById("current-task-video").style.background = "linear-gradient(135deg, #28a745, #20c997)";
         redrawCanvas();
       }
     }
