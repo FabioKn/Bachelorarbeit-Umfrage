@@ -130,6 +130,36 @@
       margin-left: 10px;
     }
     
+    canvas { 
+      display: block; 
+      border: 2px solid #007bff; 
+      margin: 20px auto; 
+      touch-action: manipulation;
+      max-width: 100%;
+    }
+    
+    .spatial-task {
+      margin: 30px 0;
+      padding: 25px;
+      background-color: #e7f3ff;
+      border-radius: 6px;
+      border-left: 4px solid #0066cc;
+    }
+    
+    .task-status {
+      font-weight: bold;
+      margin: 15px 0;
+      color: #0066cc;
+    }
+    
+    .distance-input {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f0f8ff;
+      border-radius: 6px;
+      display: none;
+    }
+    
     /* Mobile responsive */
     @media screen and (max-width: 768px) {
       body {
@@ -266,6 +296,23 @@
           <label><input type="radio" name="sofa_location" value="corner"> In einer Ecke</label>
           <label><input type="radio" name="sofa_location" value="unknown"> Weiß ich nicht mehr</label>
         </div>
+
+        <!-- Räumliche Aufgaben nach der interaktiven Erkundung -->
+        <div class="spatial-task">
+          <h4>Räumliche Lokalisierungsaufgaben</h4>
+          <p>Basierend auf deiner interaktiven Erkundung:</p>
+          
+          <div class="task-status" id="spatial-status-final">Lade Bild...</div>
+          <p id="spatial-instruction-final">Bitte klicke auf das gewünschte Objekt.</p>
+          
+          <canvas id="spatialCanvasFinal" width="800" height="600"></canvas>
+          
+          <div class="distance-input" id="distance-form-interactive">
+            <p><strong>Wie weit ist das Sofa ungefähr von der Startposition entfernt?</strong></p>
+            <input type="number" id="estimated-distance-interactive" step="0.1" min="0" placeholder="Distanz in Metern" required>
+            <button type="button" id="submit-distance-interactive">Distanz absenden</button>
+          </div>
+        </div>
       </div>
 
       <!-- Benutzererfahrung -->
@@ -319,7 +366,107 @@
   </div>
 
   <script type="module">
-    import {submitFinalQuestionnaire} from './js/supabase-client.js'
+    import {submitFinalQuestionnaire, submitClick, submitDistanceEstimate} from './js/supabase-client.js'
+
+    // Räumliche Aufgaben - Klick-Funktionalität für final questionnaire
+    const finalSpatialCanvas = document.getElementById("spatialCanvasFinal");
+    const finalSpatialCtx = finalSpatialCanvas.getContext("2d");
+    
+    const finalSpatialImages = [
+      { src: "Bilder/RegaleVogel.png", label: "Sofa1_interactive", instruction: "Bitte klicke auf den Bereich, wo das Sofa steht." },
+      { src: "Bilder/RegaleVogel.png", label: "Betonwand_interactive", instruction: "Bitte klicke auf den Bereich, wo die Betonwand ist." },
+      { src: "Bilder/Bibliothek.jpg", label: "Sofa2_interactive", instruction: "Wo stand das Sofa? Bitte markiere es." }
+    ];
+
+    let finalSpatialIndex = 0;
+    let finalSpatialImage = new Image();
+    let finalSpatialImageLoaded = false;
+    let finalSpatialTasksCompleted = false;
+
+    function loadFinalSpatialImage(index) {
+      finalSpatialImageLoaded = false;
+      document.getElementById("spatial-status-final").textContent = "Lade Bild...";
+      finalSpatialImage = new Image();
+      finalSpatialImage.src = finalSpatialImages[index].src;
+      finalSpatialImage.onload = () => {
+        const maxWidth = 800;
+        const ratio = Math.min(maxWidth / finalSpatialImage.width, maxWidth / finalSpatialImage.height);
+        finalSpatialCanvas.width = finalSpatialImage.width * ratio;
+        finalSpatialCanvas.height = finalSpatialImage.height * ratio;
+        
+        finalSpatialCtx.clearRect(0, 0, finalSpatialCanvas.width, finalSpatialCanvas.height);
+        finalSpatialCtx.drawImage(finalSpatialImage, 0, 0, finalSpatialCanvas.width, finalSpatialCanvas.height);
+        finalSpatialImageLoaded = true;
+        document.getElementById("spatial-instruction-final").textContent = finalSpatialImages[index].instruction;
+        document.getElementById("spatial-status-final").textContent = `Klicke auf: ${finalSpatialImages[index].label.replace('_interactive', '')}`;
+      };
+      finalSpatialImage.onerror = () => {
+        document.getElementById("spatial-status-final").textContent = `Fehler beim Laden von: ${finalSpatialImages[index].src}`;
+        console.error("Final spatial image could not be loaded:", finalSpatialImages[index].src);
+      };
+    }
+
+    function drawFinalSpatialMarker(x, y, color) {
+      if (!finalSpatialImageLoaded) return;
+      finalSpatialCtx.drawImage(finalSpatialImage, 0, 0, finalSpatialCanvas.width, finalSpatialCanvas.height);
+      finalSpatialCtx.beginPath();
+      finalSpatialCtx.arc(x, y, 8, 0, 2 * Math.PI);
+      finalSpatialCtx.fillStyle = color;
+      finalSpatialCtx.fill();
+      finalSpatialCtx.strokeStyle = "white";
+      finalSpatialCtx.lineWidth = 2;
+      finalSpatialCtx.stroke();
+    }
+
+    async function handleFinalSpatialClick(x, y) {
+      const label = finalSpatialImages[finalSpatialIndex].label;
+      const color = finalSpatialIndex === 0 ? "red" : finalSpatialIndex === 1 ? "blue" : "green";
+      drawFinalSpatialMarker(x, y, color);
+
+      const success = await submitClick({ object_label: label, x, y, z: 0 });
+      if (success !== false) {
+        finalSpatialIndex++;
+        if (finalSpatialIndex < finalSpatialImages.length) {
+          setTimeout(() => loadFinalSpatialImage(finalSpatialIndex), 1000);
+        } else {
+          document.getElementById("spatial-status-final").textContent = "Objekte markiert. Jetzt bitte die Distanz schätzen.";
+          document.getElementById("distance-form-interactive").style.display = "block";
+        }
+      }
+    }
+
+    function handleFinalSpatialInput(clientX, clientY) {
+      if (finalSpatialTasksCompleted) return;
+      const rect = finalSpatialCanvas.getBoundingClientRect();
+      const x = Math.round(clientX - rect.left);
+      const y = Math.round(clientY - rect.top);
+      handleFinalSpatialClick(x, y);
+    }
+
+    finalSpatialCanvas.addEventListener("click", e => handleFinalSpatialInput(e.clientX, e.clientY));
+    finalSpatialCanvas.addEventListener("touchstart", e => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      if (touch) handleFinalSpatialInput(touch.clientX, touch.clientY);
+    });
+
+    document.getElementById('submit-distance-interactive').addEventListener('click', async () => {
+      const val = parseFloat(document.getElementById('estimated-distance-interactive').value);
+      if (isNaN(val) || val < 0) {
+        alert("Bitte eine gültige Zahl eingeben.");
+        return;
+      }
+      const success = await submitDistanceEstimate(val);
+      if (success !== false) {
+        finalSpatialTasksCompleted = true;
+        document.getElementById("spatial-status-final").textContent = "Räumliche Aufgaben abgeschlossen!";
+        document.getElementById("distance-form-interactive").style.display = "none";
+        alert("Räumliche Aufgaben gespeichert! Du kannst nun den Fragebogen abschließen.");
+      }
+    });
+
+    // Initialize final spatial tasks
+    loadFinalSpatialImage(finalSpatialIndex);
 
     // Slider-Updates
     document.getElementById('realism_interactive').addEventListener('input', (e) => {
@@ -335,6 +482,12 @@
     // Form submission
     document.getElementById('final-questionnaire-form').addEventListener('submit', async (e) => {
       e.preventDefault()
+      
+      if (!finalSpatialTasksCompleted) {
+        alert("Bitte schließe zuerst die räumlichen Aufgaben ab (Objektmarkierung und Distanzschätzung).");
+        return;
+      }
+      
       const form = e.target
       
       // Checkbox-Werte sammeln
