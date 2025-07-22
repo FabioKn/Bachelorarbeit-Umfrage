@@ -505,6 +505,7 @@
       if (finalSpatialTasksCompleted || !finalSpatialImageLoaded) return;
       
       const rect = finalSpatialCanvas.getBoundingClientRect();
+      // Korrekte Koordinaten-Umrechnung für Canvas-Scaling
       const scaleX = finalSpatialCanvas.width / rect.width;
       const scaleY = finalSpatialCanvas.height / rect.height;
       const x = Math.round((clientX - rect.left) * scaleX);
@@ -538,7 +539,8 @@
       finalSpatialIndex++;
       if (finalSpatialIndex < finalSpatialImages.length) {
         document.getElementById("spatial-status-final").textContent = "Markierung bestätigt! Lade nächstes Bild...";
-        setTimeout(() => loadFinalSpatialImage(finalSpatialIndex), 1500);
+        // Sofort nächstes Bild laden ohne Delay
+        loadFinalSpatialImage(finalSpatialIndex);
       } else {
         finalSpatialTasksCompleted = true;
         document.getElementById("spatial-status-final").textContent = "Alle Objekte markiert! Bitte schätze noch die Distanz ein.";
