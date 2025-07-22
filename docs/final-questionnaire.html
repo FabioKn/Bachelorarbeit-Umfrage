@@ -169,32 +169,6 @@
       transform: translateY(-10px);
     }
     
-    .task-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      text-align: center;
-      padding: 30px 40px;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      border: 5px solid #fff;
-      z-index: 1000;
-      min-width: 300px;
-      animation: bounceIn 0.8s ease-out;
-    }
-    
-    @keyframes bounceIn {
-      0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
-      50% { transform: translate(-50%, -50%) scale(1.05); }
-      70% { transform: translate(-50%, -50%) scale(0.9); }
-      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-    
     .canvas-container {
       position: relative;
       display: inline-block;
@@ -419,9 +393,6 @@
           
           <div class="canvas-container">
             <canvas id="spatialCanvasFinal" width="800" height="600"></canvas>
-            <div class="task-overlay" id="task-overlay-final" style="display: none;">
-              🎯 Neue Aufgabe!
-            </div>
           </div>
           
           <div class="canvas-controls">
@@ -526,16 +497,6 @@
         document.getElementById("spatial-instruction-final").textContent = finalSpatialImages[index].instruction;
         document.getElementById("spatial-status-final").textContent = `Klicke auf: ${finalSpatialImages[index].label.replace('_interactive', '')}`;
         document.getElementById("current-task-final").textContent = `🎯 Aufgabe ${index + 1}/3: ${finalSpatialImages[index].instruction}`;
-        
-        // Overlay für neue Aufgabe zeigen
-        if (index > 0) {
-          const overlay = document.getElementById("task-overlay-final");
-          overlay.textContent = `🎯 Aufgabe ${index + 1}/3: ${finalSpatialImages[index].instruction}`;
-          overlay.style.display = 'block';
-          setTimeout(() => {
-            overlay.style.display = 'none';
-          }, 3000); // Nach 3 Sekunden ausblenden
-        }
       };
       finalSpatialImage.onerror = () => {
         document.getElementById("spatial-status-final").textContent = `Fehler beim Laden von: ${finalSpatialImages[index].src}`;
