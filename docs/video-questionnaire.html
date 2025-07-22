@@ -78,35 +78,50 @@
       background-color: #28a745;
       color: white;
       border: none;
-      padding: 8px 16px;
-      font-size: 14px;
-      border-radius: 4px;
+      padding: 12px;
+      font-size: 18px;
+      border-radius: 50%;
       cursor: pointer;
       margin: 10px 5px;
+      width: 50px;
+      height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
     .confirm-button:hover {
       background-color: #218838;
+      transform: scale(1.05);
     }
     
     .confirm-button:disabled {
       background-color: #6c757d;
       cursor: not-allowed;
+      transform: none;
     }
     
     .reset-button {
       background-color: #dc3545;
       color: white;
       border: none;
-      padding: 8px 16px;
-      font-size: 14px;
-      border-radius: 4px;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 50%;
       cursor: pointer;
       margin: 10px 5px;
+      width: 50px;
+      height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
     .reset-button:hover {
       background-color: #c82333;
+      transform: scale(1.05);
     }
     
     .canvas-controls {
@@ -261,8 +276,8 @@
         <canvas id="spatialCanvas" width="800" height="600"></canvas>
         
         <div class="canvas-controls">
-          <button type="button" class="confirm-button" id="confirm-marker-video" disabled>Markierung bestätigen</button>
-          <button type="button" class="reset-button" id="reset-marker-video">Markierung zurücksetzen</button>
+          <button type="button" class="confirm-button" id="confirm-marker-video" disabled>✓</button>
+          <button type="button" class="reset-button" id="reset-marker-video">↻</button>
         </div>
         
         <div class="distance-input">
@@ -327,15 +342,14 @@
       document.getElementById("confirm-marker-video").disabled = true;
       
       spatialImage = new Image();
-      spatialImage.src = spatialImages[index].src;
       spatialImage.onload = () => {
         const maxWidth = 800;
         const ratio = Math.min(maxWidth / spatialImage.width, maxWidth / spatialImage.height);
         spatialCanvas.width = spatialImage.width * ratio;
         spatialCanvas.height = spatialImage.height * ratio;
         
-        redrawCanvas();
         spatialImageLoaded = true;
+        redrawCanvas();
         document.getElementById("spatial-instruction").textContent = spatialImages[index].instruction;
         document.getElementById("spatial-status").textContent = `Klicke auf: ${spatialImages[index].label.replace('_video', '')}`;
       };
@@ -343,6 +357,7 @@
         document.getElementById("spatial-status").textContent = `Fehler beim Laden von: ${spatialImages[index].src}`;
         console.error("Spatial image could not be loaded:", spatialImages[index].src);
       };
+      spatialImage.src = spatialImages[index].src; // Src NACH onload setzen
     }
 
     function redrawCanvas() {
@@ -395,11 +410,9 @@
       if (spatialTasksCompleted || !spatialImageLoaded) return;
       
       const rect = spatialCanvas.getBoundingClientRect();
-      // Korrekte Koordinaten-Umrechnung für Canvas-Scaling
-      const scaleX = spatialCanvas.width / rect.width;
-      const scaleY = spatialCanvas.height / rect.height;
-      const x = Math.round((clientX - rect.left) * scaleX);
-      const y = Math.round((clientY - rect.top) * scaleY);
+      // Direkte Koordinaten ohne Skalierung - Canvas wird automatisch skaliert
+      const x = Math.round(clientX - rect.left);
+      const y = Math.round(clientY - rect.top);
       
       // Neuen temporären Marker setzen
       pendingClick = { x, y };

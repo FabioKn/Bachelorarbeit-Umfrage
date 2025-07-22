@@ -163,35 +163,50 @@
       background-color: #28a745;
       color: white;
       border: none;
-      padding: 8px 16px;
-      font-size: 14px;
-      border-radius: 4px;
+      padding: 12px;
+      font-size: 18px;
+      border-radius: 50%;
       cursor: pointer;
       margin: 10px 5px;
+      width: 50px;
+      height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
     .confirm-button:hover {
       background-color: #218838;
+      transform: scale(1.05);
     }
     
     .confirm-button:disabled {
       background-color: #6c757d;
       cursor: not-allowed;
+      transform: none;
     }
     
     .reset-button {
       background-color: #dc3545;
       color: white;
       border: none;
-      padding: 8px 16px;
-      font-size: 14px;
-      border-radius: 4px;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 50%;
       cursor: pointer;
       margin: 10px 5px;
+      width: 50px;
+      height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
     .reset-button:hover {
       background-color: #c82333;
+      transform: scale(1.05);
     }
     
     .canvas-controls {
@@ -347,8 +362,8 @@
           <canvas id="spatialCanvasFinal" width="800" height="600"></canvas>
           
           <div class="canvas-controls">
-            <button type="button" class="confirm-button" id="confirm-marker-final" disabled>Markierung bestätigen</button>
-            <button type="button" class="reset-button" id="reset-marker-final">Markierung zurücksetzen</button>
+            <button type="button" class="confirm-button" id="confirm-marker-final" disabled>✓</button>
+            <button type="button" class="reset-button" id="reset-marker-final">↻</button>
           </div>
           
           <div class="distance-input">
