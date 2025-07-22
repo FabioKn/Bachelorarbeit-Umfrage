@@ -453,8 +453,18 @@
     document.getElementById('confirm-marker-video').addEventListener('click', confirmCurrentMarker);
     document.getElementById('reset-marker-video').addEventListener('click', resetCurrentMarker);
 
-    // Initialize spatial tasks
-    loadSpatialImage(spatialIndex);
+    // Initialize spatial tasks when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSpatialImage(spatialIndex);
+    });
+    
+    // Fallback: Initialize immediately if DOM is already loaded
+    if (document.readyState === 'loading') {
+      // DOM is still loading, event listener above will handle it
+    } else {
+      // DOM is already loaded
+      loadSpatialImage(spatialIndex);
+    }
 
     // Form submission handler
     document.getElementById('video-questionnaire-form').addEventListener('submit', async (e) => {

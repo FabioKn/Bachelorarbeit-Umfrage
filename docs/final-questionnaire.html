@@ -565,8 +565,18 @@
     document.getElementById('confirm-marker-final').addEventListener('click', confirmCurrentMarker);
     document.getElementById('reset-marker-final').addEventListener('click', resetCurrentMarker);
 
-    // Initialize final spatial tasks
-    loadFinalSpatialImage(finalSpatialIndex);
+    // Initialize final spatial tasks when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      loadFinalSpatialImage(finalSpatialIndex);
+    });
+    
+    // Fallback: Initialize immediately if DOM is already loaded
+    if (document.readyState === 'loading') {
+      // DOM is still loading, event listener above will handle it
+    } else {
+      // DOM is already loaded
+      loadFinalSpatialImage(finalSpatialIndex);
+    }
 
     // Slider-Updates
     document.getElementById('realism_interactive').addEventListener('input', (e) => {
