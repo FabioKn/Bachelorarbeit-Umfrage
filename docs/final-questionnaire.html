@@ -435,13 +435,16 @@
       }
     }
 
-    function handleFinalSpatialInput(clientX, clientY) {
-      if (finalSpatialTasksCompleted) return;
-      const rect = finalSpatialCanvas.getBoundingClientRect();
-      const x = Math.round(clientX - rect.left);
-      const y = Math.round(clientY - rect.top);
-      handleFinalSpatialClick(x, y);
-    }
+    function handleSpatialInput(clientX, clientY) {
+  if (spatialTasksCompleted) return;
+  const rect = spatialCanvas.getBoundingClientRect();
+  const scaleX = spatialCanvas.width / rect.width;
+  const scaleY = spatialCanvas.height / rect.height;
+  const x = Math.round((clientX - rect.left) * scaleX);
+  const y = Math.round((clientY - rect.top) * scaleY);
+  handleSpatialClick(x, y);
+}
+
 
     finalSpatialCanvas.addEventListener("click", e => handleFinalSpatialInput(e.clientX, e.clientY));
     finalSpatialCanvas.addEventListener("touchstart", e => {

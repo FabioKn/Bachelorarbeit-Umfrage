@@ -326,12 +326,15 @@
     }
 
     function handleSpatialInput(clientX, clientY) {
-      if (spatialTasksCompleted) return;
-      const rect = spatialCanvas.getBoundingClientRect();
-      const x = Math.round(clientX - rect.left);
-      const y = Math.round(clientY - rect.top);
-      handleSpatialClick(x, y);
-    }
+  if (spatialTasksCompleted) return;
+  const rect = spatialCanvas.getBoundingClientRect();
+  const scaleX = spatialCanvas.width / rect.width;
+  const scaleY = spatialCanvas.height / rect.height;
+  const x = Math.round((clientX - rect.left) * scaleX);
+  const y = Math.round((clientY - rect.top) * scaleY);
+  handleSpatialClick(x, y);
+}
+
 
     spatialCanvas.addEventListener("click", e => handleSpatialInput(e.clientX, e.clientY));
     spatialCanvas.addEventListener("touchstart", e => {
