@@ -17,6 +17,15 @@
     <img src="HTWK.svg" alt="HTWK Leipzig" style="height: 60px;">
   </header>
 
+  <div id="status">Lade Bild...</div>
+  <p id="instruction">Bitte klicke auf das gewünschte Objekt.</p>
+  
+  <div id="object-description">
+    <p>Aktuelles Objekt: <span id="current-object"></span></p>
+  </div>
+
+  <canvas id="sceneCanvas" width="800" height="600"></canvas>
+
 
   <div id="distance-form">
     <p><strong>Wie weit ist das Sofa ungefähr von dir entfernt?</strong></p>
@@ -42,15 +51,27 @@
 
     function loadImage(index) {
       imageLoaded = false;
+      document.getElementById("status").textContent = "Lade Bild...";
       currentImage = new Image();
       currentImage.src = images[index].src;
       currentImage.onload = () => {
+        // Canvas auf Bildgröße anpassen (maximal 800px breit)
+        const maxWidth = 800;
+        const ratio = Math.min(maxWidth / currentImage.width, maxWidth / currentImage.height);
+        canvas.width = currentImage.width * ratio;
+        canvas.height = currentImage.height * ratio;
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
         imageLoaded = true;
         document.getElementById("instruction").textContent = images[index].instruction;
         document.getElementById("current-object").textContent = images[index].label;
         document.getElementById("object-description").style.display = index < 2 ? "block" : "none";
+        document.getElementById("status").textContent = `Klicke auf: ${images[index].label}`;
+      };
+      currentImage.onerror = () => {
+        document.getElementById("status").textContent = `Fehler beim Laden von: ${images[index].src}`;
+        console.error("Bild konnte nicht geladen werden:", images[index].src);
       };
     }
 
@@ -107,6 +128,7 @@
     });
 
     // Start
+    document.getElementById("status").textContent = `Klick für Objekt ${images[currentIndex].label} erwartet…`;
     loadImage(currentIndex);
   </script>
 </body>
