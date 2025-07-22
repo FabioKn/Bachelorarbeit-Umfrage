@@ -72,7 +72,46 @@
       padding: 15px;
       background-color: #f0f8ff;
       border-radius: 6px;
-      display: none;
+    }
+    
+    .confirm-button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    
+    .confirm-button:hover {
+      background-color: #218838;
+    }
+    
+    .confirm-button:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+    
+    .reset-button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    
+    .reset-button:hover {
+      background-color: #c82333;
+    }
+    
+    .canvas-controls {
+      text-align: center;
+      margin: 15px 0;
     }
     
     select, textarea, input[type="text"], input[type="number"] {
@@ -221,10 +260,14 @@
         
         <canvas id="spatialCanvas" width="800" height="600"></canvas>
         
-        <div class="distance-input" id="distance-form-video">
-          <p><strong>Wie weit ist das Sofa ungefähr von der Startposition entfernt?</strong></p>
-          <input type="number" id="estimated-distance-video" step="0.1" min="0" placeholder="Distanz in Metern" required>
-          <button type="button" id="submit-distance-video">Distanz absenden</button>
+        <div class="canvas-controls">
+          <button type="button" class="confirm-button" id="confirm-marker-video" disabled>Markierung bestätigen</button>
+          <button type="button" class="reset-button" id="reset-marker-video">Markierung zurücksetzen</button>
+        </div>
+        
+        <div class="distance-input">
+          <label for="estimated-distance-video"><strong>Wie weit ist das Sofa ungefähr von der Startposition entfernt?</strong></label>
+          <input type="number" id="estimated-distance-video" name="estimated_distance_video" step="0.1" min="0" placeholder="Distanz in Metern" required>
         </div>
       </div>
 
@@ -272,10 +315,17 @@
     let spatialImage = new Image();
     let spatialImageLoaded = false;
     let spatialTasksCompleted = false;
+    let currentMarker = null; // Speichert aktuelle Marker-Position
+    let pendingClick = null; // Speichert temporäre Klick-Position
+    let clicksData = []; // Speichert alle bestätigten Klicks
 
     function loadSpatialImage(index) {
       spatialImageLoaded = false;
+      currentMarker = null;
+      pendingClick = null;
       document.getElementById("spatial-status").textContent = "Lade Bild...";
+      document.getElementById("confirm-marker-video").disabled = true;
+      
       spatialImage = new Image();
       spatialImage.src = spatialImages[index].src;
       spatialImage.onload = () => {
@@ -284,8 +334,7 @@
         spatialCanvas.width = spatialImage.width * ratio;
         spatialCanvas.height = spatialImage.height * ratio;
         
-        spatialCtx.clearRect(0, 0, spatialCanvas.width, spatialCanvas.height);
-        spatialCtx.drawImage(spatialImage, 0, 0, spatialCanvas.width, spatialCanvas.height);
+        redrawCanvas();
         spatialImageLoaded = true;
         document.getElementById("spatial-instruction").textContent = spatialImages[index].instruction;
         document.getElementById("spatial-status").textContent = `Klicke auf: ${spatialImages[index].label.replace('_video', '')}`;
@@ -296,46 +345,104 @@
       };
     }
 
-    function drawSpatialMarker(x, y, color) {
+    function redrawCanvas() {
       if (!spatialImageLoaded) return;
+      
+      // Bild zeichnen
+      spatialCtx.clearRect(0, 0, spatialCanvas.width, spatialCanvas.height);
       spatialCtx.drawImage(spatialImage, 0, 0, spatialCanvas.width, spatialCanvas.height);
+      
+      // Bestätigte Marker zeichnen (grau)
+      clicksData.forEach((click, idx) => {
+        if (idx < spatialIndex) {
+          drawMarker(click.x, click.y, "#888888", true);
+        }
+      });
+      
+      // Aktueller Marker (falls bestätigt)
+      if (currentMarker) {
+        const color = spatialIndex === 0 ? "red" : spatialIndex === 1 ? "blue" : "green";
+        drawMarker(currentMarker.x, currentMarker.y, color, true);
+      }
+      
+      // Temporärer Marker (falls noch nicht bestätigt)
+      if (pendingClick && !currentMarker) {
+        const color = spatialIndex === 0 ? "red" : spatialIndex === 1 ? "blue" : "green";
+        drawMarker(pendingClick.x, pendingClick.y, color, false);
+      }
+    }
+
+    function drawMarker(x, y, color, confirmed = false) {
       spatialCtx.beginPath();
       spatialCtx.arc(x, y, 8, 0, 2 * Math.PI);
       spatialCtx.fillStyle = color;
       spatialCtx.fill();
-      spatialCtx.strokeStyle = "white";
-      spatialCtx.lineWidth = 2;
+      spatialCtx.strokeStyle = confirmed ? "white" : "yellow";
+      spatialCtx.lineWidth = confirmed ? 2 : 3;
       spatialCtx.stroke();
-    }
-
-    async function handleSpatialClick(x, y) {
-      const label = spatialImages[spatialIndex].label;
-      const color = spatialIndex === 0 ? "red" : spatialIndex === 1 ? "blue" : "green";
-      drawSpatialMarker(x, y, color);
-
-      const success = await submitClick({ object_label: label, x, y, z: 0 });
-      if (success !== false) {
-        spatialIndex++;
-        if (spatialIndex < spatialImages.length) {
-          setTimeout(() => loadSpatialImage(spatialIndex), 1000);
-        } else {
-          document.getElementById("spatial-status").textContent = "Objekte markiert. Jetzt bitte die Distanz schätzen.";
-          document.getElementById("distance-form-video").style.display = "block";
-        }
+      
+      if (!confirmed) {
+        // Blinkeffekt für unbestätigten Marker
+        spatialCtx.strokeStyle = "yellow";
+        spatialCtx.lineWidth = 1;
+        spatialCtx.setLineDash([5, 5]);
+        spatialCtx.stroke();
+        spatialCtx.setLineDash([]);
       }
     }
 
     function handleSpatialInput(clientX, clientY) {
-  if (spatialTasksCompleted) return;
-  const rect = spatialCanvas.getBoundingClientRect();
-  const scaleX = spatialCanvas.width / rect.width;
-  const scaleY = spatialCanvas.height / rect.height;
-  const x = Math.round((clientX - rect.left) * scaleX);
-  const y = Math.round((clientY - rect.top) * scaleY);
-  handleSpatialClick(x, y);
-}
+      if (spatialTasksCompleted || !spatialImageLoaded) return;
+      
+      const rect = spatialCanvas.getBoundingClientRect();
+      const x = Math.round(clientX - rect.left);
+      const y = Math.round(clientY - rect.top);
+      
+      // Neuen temporären Marker setzen
+      pendingClick = { x, y };
+      currentMarker = null; // Aktuellen Marker zurücksetzen
+      document.getElementById("confirm-marker-video").disabled = false;
+      document.getElementById("spatial-status").textContent = "Markierung gesetzt - bitte bestätigen oder neu positionieren";
+      
+      redrawCanvas();
+    }
 
+    async function confirmCurrentMarker() {
+      if (!pendingClick) return;
+      
+      currentMarker = { ...pendingClick };
+      const label = spatialImages[spatialIndex].label;
+      
+      // Klick-Daten für späteren Submit speichern
+      clicksData[spatialIndex] = {
+        label: label,
+        x: currentMarker.x,
+        y: currentMarker.y
+      };
+      
+      pendingClick = null;
+      document.getElementById("confirm-marker-video").disabled = true;
+      
+      spatialIndex++;
+      if (spatialIndex < spatialImages.length) {
+        document.getElementById("spatial-status").textContent = "Markierung bestätigt! Lade nächstes Bild...";
+        setTimeout(() => loadSpatialImage(spatialIndex), 1500);
+      } else {
+        spatialTasksCompleted = true;
+        document.getElementById("spatial-status").textContent = "Alle Objekte markiert! Bitte schätze noch die Distanz ein.";
+        redrawCanvas();
+      }
+    }
 
+    function resetCurrentMarker() {
+      pendingClick = null;
+      currentMarker = null;
+      document.getElementById("confirm-marker-video").disabled = true;
+      document.getElementById("spatial-status").textContent = `Klicke auf: ${spatialImages[spatialIndex].label.replace('_video', '')}`;
+      redrawCanvas();
+    }
+
+    // Event Listeners
     spatialCanvas.addEventListener("click", e => handleSpatialInput(e.clientX, e.clientY));
     spatialCanvas.addEventListener("touchstart", e => {
       e.preventDefault();
@@ -343,20 +450,8 @@
       if (touch) handleSpatialInput(touch.clientX, touch.clientY);
     });
 
-    document.getElementById('submit-distance-video').addEventListener('click', async () => {
-      const val = parseFloat(document.getElementById('estimated-distance-video').value);
-      if (isNaN(val) || val < 0) {
-        alert("Bitte eine gültige Zahl eingeben.");
-        return;
-      }
-      const success = await submitDistanceEstimate(val);
-      if (success !== false) {
-        spatialTasksCompleted = true;
-        document.getElementById("spatial-status").textContent = "Räumliche Aufgaben abgeschlossen!";
-        document.getElementById("distance-form-video").style.display = "none";
-        alert("Räumliche Aufgaben gespeichert! Du kannst nun den Fragebogen abschließen.");
-      }
-    });
+    document.getElementById('confirm-marker-video').addEventListener('click', confirmCurrentMarker);
+    document.getElementById('reset-marker-video').addEventListener('click', resetCurrentMarker);
 
     // Initialize spatial tasks
     loadSpatialImage(spatialIndex);
@@ -366,11 +461,27 @@
       e.preventDefault()
       
       if (!spatialTasksCompleted) {
-        alert("Bitte schließe zuerst die räumlichen Aufgaben ab (Objektmarkierung und Distanzschätzung).");
+        alert("Bitte schließe zuerst die räumlichen Aufgaben ab (alle Objekte markieren).");
         return;
       }
       
       const form = e.target
+      
+      // Prüfe ob Distanz eingegeben wurde
+      const distanceValue = parseFloat(form.estimated_distance_video.value);
+      if (isNaN(distanceValue) || distanceValue < 0) {
+        alert("Bitte gib eine gültige Distanzschätzung ein.");
+        form.estimated_distance_video.focus();
+        return;
+      }
+      
+      // Klick-Daten an Supabase senden
+      for (const clickData of clicksData) {
+        await submitClick({ object_label: clickData.label, x: clickData.x, y: clickData.y, z: 0 });
+      }
+      
+      // Distanzschätzung an Supabase senden
+      await submitDistanceEstimate(distanceValue);
       
       const formData = {
         gs_known: form.gs_known.value === "true",
@@ -386,7 +497,8 @@
         sofa_color: form.sofa_color.value,
         quality: parseInt(form.quality.value),
         orientation_confidence: parseInt(form.orientation_confidence.value),
-        additional_comments: form.additional_comments.value
+        additional_comments: form.additional_comments.value,
+        estimated_distance_video: distanceValue // Distanz auch in Fragebogendaten speichern
       }
 
       await submitVideoQuestionnaire(formData)
