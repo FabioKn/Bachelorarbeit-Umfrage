@@ -17,18 +17,9 @@
     <img src="HTWK.svg" alt="HTWK Leipzig" style="height: 60px;">
   </header>
 
-  <h1>Objektpositionen & Distanzschätzung</h1>
-  <p id="instruction">
-    Bitte klicke auf die Stelle, an der du Objekt <strong id="current-object">A</strong> gesehen hast.
-  </p>
-  <p id="object-description">Objekt A: Lichter, Objekt B: Raben</p>
-
-  <canvas id="sceneCanvas" width="800" height="500"></canvas>
-
-  <div id="status">Warte auf Klick für Objekt A…</div>
 
   <div id="distance-form">
-    <p><strong>Wie weit waren die beiden Objekte ungefähr voneinander entfernt?</strong></p>
+    <p><strong>Wie weit ist das Sofa ungefähr von dir entfernt?</strong></p>
     <input type="number" id="estimated-distance" step="0.1" min="0" placeholder="Distanz in Metern" required>
     <button id="submit-distance">Absenden</button>
   </div>
@@ -40,9 +31,9 @@
     const ctx = canvas.getContext("2d");
 
     const images = [
-      { src: "Bilder/RegaleVogel.png", label: "Sofa1", instruction: "Bitte klicke auf auf den Bereich, wo das Sofa steht." },
-      { src: "Bilder/RegaleVogel.png", label: "Betonwand", instruction: "Bitte klicke auf den Bereich, wo die Betonwand ist." },
-      { src: "Bilder/Bibliothek.jpg", label: "Sofa2", instruction: "Wo stand das Sofa? Bitte markiere es." }
+      { src: "../Bilder/RegaleVogel.png", label: "Sofa1", instruction: "Bitte klicke auf auf den Bereich, wo das Sofa steht." },
+      { src: "../Bilder/RegaleVogel.png", label: "Betonwand", instruction: "Bitte klicke auf den Bereich, wo die Betonwand ist." },
+      { src: "../Bilder/Bibliothek.jpg", label: "Sofa2", instruction: "Wo stand das Sofa? Bitte markiere es." }
     ];
 
     let currentIndex = 0;
