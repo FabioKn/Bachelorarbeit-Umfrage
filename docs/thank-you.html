@@ -163,16 +163,7 @@
       <p>Deine Antworten und Interaktionen helfen uns dabei, zu verstehen, wie Menschen 3D-Umgebungen wahrnehmen und navigieren. Diese Erkenntnisse sind wichtig für die Entwicklung besserer virtueller und augmentierter Realitäts-Anwendungen.</p>
     </div>
     
-    <div class="stats" id="participantStats">
-      <div class="stat-item">
-        <div class="stat-number" id="questionsAnswered">--</div>
-        <div class="stat-label">Fragen beantwortet</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number" id="participantId">--</div>
-        <div class="stat-label">Deine Teilnehmer-ID</div>
-      </div>
-    </div>
+
     
     <div class="contact-info">
       <h3>Kontakt & Weitere Informationen</h3>
@@ -194,40 +185,7 @@
       <p><small>2025 HTWK Leipzig - Alle Rechte vorbehalten</small></p>
     </div>
   </div>
-
-  <script type="module">
-    import { getParticipantId, getParticipantStats } from './js/supabase-client.js'
-
-    window.addEventListener('load', async () => {
-      // Teilnehmer-ID anzeigen
-      const participantId = getParticipantId();
-      if (participantId) {
-        document.getElementById('participantId').textContent = participantId;
-        
-        // Statistiken laden
-        try {
-          const stats = await getParticipantStats(participantId);
-          if (stats) {
-            // Gesamtdauer berechnen
-            if (stats.total_time) {
-              const minutes = Math.floor(stats.total_time / 60000);
-              const seconds = Math.floor((stats.total_time % 60000) / 1000);
-              document.getElementById('sessionTime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }
-            
-            // Anzahl beantworteter Fragen
-            document.getElementById('questionsAnswered').textContent = stats.questions_answered || '--';
-          }
-        } catch (error) {
-          console.log('Statistiken konnten nicht geladen werden:', error);
-        }
-      }
       
-      // SessionStorage nach Abschluss leeren
-      setTimeout(() => {
-        sessionStorage.clear();
-      }, 30000); // Nach 30 Sekunden
-    });
   </script>
 </body>
 </html>
