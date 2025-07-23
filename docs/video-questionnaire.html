@@ -572,8 +572,14 @@
         estimated_distance_video: distanceValue // Distanz auch in Fragebogendaten speichern
       }
 
-      await submitVideoQuestionnaire(formData)
-      window.location.href = "interactive-viewer.html"
+      console.log('Sende Video-Fragebogen Daten:', formData)
+      try {
+        await submitVideoQuestionnaire(formData)
+        window.location.href = "interactive-viewer.html"
+      } catch (error) {
+        console.error('Fehler beim Speichern:', error)
+        alert('Fehler beim Speichern der Daten. Bitte versuche es erneut.')
+      }
     })
   </script>
 </body>

@@ -703,10 +703,15 @@
         estimated_distance: distanceValue // Distanz auch in Fragebogendaten speichern
       }
 
-      await submitFinalQuestionnaire(formData)
-      
-      // Weiterleitung zur Dankesseite
-      window.location.href = "thank-you.html"
+      console.log('Sende finalen Fragebogen Daten:', formData)
+      try {
+        await submitFinalQuestionnaire(formData)
+        // Weiterleitung zur Dankesseite
+        window.location.href = "thank-you.html"
+      } catch (error) {
+        console.error('Fehler beim Speichern:', error)
+        alert('Fehler beim Speichern der Daten. Bitte versuche es erneut.')
+      }
     })
 
   </script>

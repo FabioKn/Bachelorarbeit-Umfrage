@@ -62,12 +62,21 @@ export async function submitDistanceEstimate(estimated_distance) {
 
 export async function submitVideoQuestionnaire(formData) {
   const participant_id = getParticipantId()
-  const { error } = await supabase.from('video_questionnaire').insert([{
+  console.log('Speichere Video-Fragebogen für Teilnehmer:', participant_id)
+  console.log('Daten:', formData)
+  
+  const { data, error } = await supabase.from('video_questionnaire').insert([{
     participant_id,
     ...formData,
     timestamp: new Date().toISOString()
   }])
-  if (error) console.error('Fehler beim Speichern des Video-Fragebogens:', error)
+  
+  if (error) {
+    console.error('Fehler beim Speichern des Video-Fragebogens:', error)
+    alert('Fehler beim Speichern: ' + error.message)
+  } else {
+    console.log('Video-Fragebogen erfolgreich gespeichert:', data)
+  }
 }
 
 export async function logExplorationTime(explorationTime) {
@@ -82,12 +91,21 @@ export async function logExplorationTime(explorationTime) {
 
 export async function submitFinalQuestionnaire(formData) {
   const participant_id = getParticipantId()
-  const { error } = await supabase.from('final_questionnaire').insert([{
+  console.log('Speichere finalen Fragebogen für Teilnehmer:', participant_id)
+  console.log('Daten:', formData)
+  
+  const { data, error } = await supabase.from('final_questionnaire').insert([{
     participant_id,
     ...formData,
     timestamp: new Date().toISOString()
   }])
-  if (error) console.error('Fehler beim Speichern des finalen Fragebogens:', error)
+  
+  if (error) {
+    console.error('Fehler beim Speichern des finalen Fragebogens:', error)
+    alert('Fehler beim Speichern: ' + error.message)
+  } else {
+    console.log('Finaler Fragebogen erfolgreich gespeichert:', data)
+  }
 }
 
 export async function loadPreviousAnswers() {
